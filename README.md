@@ -54,9 +54,3 @@ Como o projeto está em desenvolvimento e a API ainda será implementada, os pas
 3.  **Abra no IntelliJ IDEA:**
       * Abra o projeto (`File` \> `Open...`) e selecione a pasta raiz.
       * O Maven deve baixar automaticamente todas as dependências listadas no arquivo `pom.xml`.
-
-## 🧑‍💻 Contato
-
-Para dúvidas, sugestões ou mais informações sobre o projeto, você pode me encontrar no GitHub:
-
-  * **Criador:** [@gabs0001]
