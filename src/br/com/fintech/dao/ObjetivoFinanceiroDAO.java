@@ -10,7 +10,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ObjetivoFinanceiroDAO implements CrudDAO<ObjetivoFinanceiro, Long> {
+public class ObjetivoFinanceiroDAO implements CrudDAO<ObjetivoFinanceiro, Long>, AutoCloseable {
     private final Connection conexao;
 
     public ObjetivoFinanceiroDAO() throws SQLException {
@@ -18,10 +18,10 @@ public class ObjetivoFinanceiroDAO implements CrudDAO<ObjetivoFinanceiro, Long> 
     }
 
     public void insert(ObjetivoFinanceiro objetivoFinanceiro) throws SQLException {
-        try(PreparedStatement stm = conexao.prepareStatement(
-                "INSERT INTO T_SIF_OBJETIVO_FINANCEIRO (COD_OBJETIVO, NOM_OBJETIVO, DES_OBJETIVO, VAL_OBJETIVO, DAT_CONCLUSAO_OBJETIVO, COD_USUARIO) " +
-                        "VALUES (SEQ_SIF_OBJETIVO_FINANCEIRO.NEXTVAL, ?,?,?,?,?)", new String[]{"COD_OBJETIVO"}
-        )) {
+        String sql = "INSERT INTO T_SIF_OBJETIVO_FINANCEIRO (COD_OBJETIVO, NOM_OBJETIVO, DES_OBJETIVO, VAL_OBJETIVO, DAT_CONCLUSAO_OBJETIVO, COD_USUARIO) " +
+                "VALUES (SEQ_SIF_OBJETIVO_FINANCEIRO.NEXTVAL, ?,?,?,?,?)";
+
+        try(PreparedStatement stm = conexao.prepareStatement(sql, new String[]{"COD_OBJETIVO"})) {
             stm.setString(1, objetivoFinanceiro.getNome());
             stm.setString(2, objetivoFinanceiro.getDescricao());
             stm.setBigDecimal(3, objetivoFinanceiro.getValor());
@@ -53,7 +53,9 @@ public class ObjetivoFinanceiroDAO implements CrudDAO<ObjetivoFinanceiro, Long> 
     }
 
     public List<ObjetivoFinanceiro> getAll() throws SQLException {
-        try(PreparedStatement stm = conexao.prepareStatement("SELECT * FROM T_SIF_OBJETIVO_FINANCEIRO");
+        String sql = "SELECT * FROM T_SIF_OBJETIVO_FINANCEIRO";
+
+        try(PreparedStatement stm = conexao.prepareStatement(sql);
             ResultSet result = stm.executeQuery()) {
 
             List<ObjetivoFinanceiro> objetivosFinanceiros = new ArrayList<>();
@@ -67,9 +69,9 @@ public class ObjetivoFinanceiroDAO implements CrudDAO<ObjetivoFinanceiro, Long> 
     }
 
     public ObjetivoFinanceiro getById(Long idEntity, Long idUser) throws SQLException {
-        try(PreparedStatement stm = conexao.prepareStatement(
-                "SELECT * FROM T_SIF_OBJETIVO_FINANCEIRO WHERE COD_OBJETIVO = ? AND COD_USUARIO = ?"
-        )) {
+        String sql = "SELECT * FROM T_SIF_OBJETIVO_FINANCEIRO WHERE COD_OBJETIVO = ? AND COD_USUARIO = ?";
+
+        try(PreparedStatement stm = conexao.prepareStatement(sql)) {
             stm.setLong(1, idEntity);
             stm.setLong(1, idUser);
 
@@ -81,10 +83,10 @@ public class ObjetivoFinanceiroDAO implements CrudDAO<ObjetivoFinanceiro, Long> 
     }
 
     public void update(ObjetivoFinanceiro objetivoFinanceiro) throws SQLException, EntityNotFoundException {
-        try(PreparedStatement stm = conexao.prepareStatement(
-                "UPDATE T_SIF_OBJETIVO_FINANCEIRO SET NOM_OBJETIVO = ?, DES_OBJETIVO = ?, VAL_OBJETIVO = ?, DAT_CONCLUSAO = ? " +
-                        "WHERE COD_OBJETIVO = ? AND COD_USUARIO = ?"
-        )) {
+        String sql = "UPDATE T_SIF_OBJETIVO_FINANCEIRO SET NOM_OBJETIVO = ?, DES_OBJETIVO = ?, VAL_OBJETIVO = ?, DAT_CONCLUSAO = ? " +
+                "WHERE COD_OBJETIVO = ? AND COD_USUARIO = ?";
+
+        try(PreparedStatement stm = conexao.prepareStatement(sql)) {
             stm.setString(1, objetivoFinanceiro.getNome());
             stm.setString(2, objetivoFinanceiro.getDescricao());
             stm.setBigDecimal(3, objetivoFinanceiro.getValor());
@@ -101,7 +103,9 @@ public class ObjetivoFinanceiroDAO implements CrudDAO<ObjetivoFinanceiro, Long> 
     }
 
     public void remove(Long id) throws SQLException, EntityNotFoundException {
-        try(PreparedStatement stm = conexao.prepareStatement("DELETE FROM T_SIF_OBJETIVO_FINANCEIRO WHERE COD_OBJETIVO = ?")) {
+        String sql = "DELETE FROM T_SIF_OBJETIVO_FINANCEIRO WHERE COD_OBJETIVO = ?";
+
+        try(PreparedStatement stm = conexao.prepareStatement(sql)) {
             stm.setLong(1, id);
 
             int linha = stm.executeUpdate();
@@ -109,7 +113,8 @@ public class ObjetivoFinanceiroDAO implements CrudDAO<ObjetivoFinanceiro, Long> 
         }
     }
 
-    public void fecharConexao() throws SQLException {
+    @Override
+    public void close() throws SQLException {
         if(conexao != null) conexao.close();
     }
 }

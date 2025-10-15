@@ -2,6 +2,8 @@ package br.com.fintech.dao;
 
 import br.com.fintech.exceptions.EntityNotFoundException;
 import br.com.fintech.factory.ConnectionFactory;
+import br.com.fintech.model.Categoria;
+import br.com.fintech.model.Instituicao;
 import br.com.fintech.model.Investimento;
 
 import java.math.BigDecimal;
@@ -9,7 +11,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class InvestimentoDAO implements CrudDAO<Investimento, Long> {
+public class InvestimentoDAO implements CrudDAO<Investimento, Long>, AutoCloseable {
     private final Connection conexao;
 
     public InvestimentoDAO() throws SQLException {
@@ -17,12 +19,12 @@ public class InvestimentoDAO implements CrudDAO<Investimento, Long> {
     }
 
     public void insert(Investimento investimento) throws SQLException {
-        try(PreparedStatement stm = conexao.prepareStatement(
-                "INSERT INTO T_SIF_INVESTIMENTO (" +
-                        "COD_INVESTIMENTO, NOM_APLICACAO, VAL_APLICACAO, DES_INVESTIMENTO, DAT_REALIZACAO, DAT_VENCIMENTO, " +
-                        "COD_USUARIO, COD_TIPO_INVESTIMENTO, COD_INSTITUICAO) " +
-                        "VALUES (SEQ_SIF_INVESTIMENTO.NEXTVAL,?,?,?,?,?,?,?,?)", new String[]{"COD_INVESTIMENTO"}
-        )) {
+        String sql = "INSERT INTO T_SIF_INVESTIMENTO (" +
+                "COD_INVESTIMENTO, NOM_APLICACAO, VAL_APLICACAO, DES_INVESTIMENTO, DAT_REALIZACAO, DAT_VENCIMENTO, " +
+                "COD_USUARIO, COD_TIPO_INVESTIMENTO, COD_INSTITUICAO) " +
+                "VALUES (SEQ_SIF_INVESTIMENTO.NEXTVAL,?,?,?,?,?,?,?,?)";
+
+        try(PreparedStatement stm = conexao.prepareStatement(sql, new String[]{"COD_INVESTIMENTO"})) {
             stm.setString(1, investimento.getNome());
             stm.setBigDecimal(2, investimento.getValor());
             stm.setString(3, investimento.getDescricao());
@@ -54,21 +56,26 @@ public class InvestimentoDAO implements CrudDAO<Investimento, Long> {
         Long categoriaId = result.getLong("COD_TIPO_INVESTIMENTO");
         Long instituicaoId = result.getLong("COD_INSTITUICAO");
 
+        Categoria categoria = new Categoria(categoriaId, null);
+        Instituicao instituicao = new Instituicao(instituicaoId, null);
+
         return new Investimento(
                 id,
                 usuarioId,
                 descricao,
-                categoriaId,
+                categoria,
                 valor,
                 nome,
                 dataRealizacao != null ? dataRealizacao.toLocalDate() : null,
                 dataVencimento != null ? dataVencimento.toLocalDate() : null,
-                instituicaoId
+                instituicao
         );
     }
 
     public List<Investimento> getAll() throws SQLException {
-        try(PreparedStatement stm = conexao.prepareStatement("SELECT * FROM T_SIF_INVESTIMENTO");
+        String sql = "SELECT * FROM T_SIF_INVESTIMENTO";
+
+        try(PreparedStatement stm = conexao.prepareStatement(sql);
              ResultSet result = stm.executeQuery()) {
 
             List<Investimento> investimentos = new ArrayList<>();
@@ -82,9 +89,9 @@ public class InvestimentoDAO implements CrudDAO<Investimento, Long> {
     }
 
     public Investimento getById(Long idEntity, Long idUser) throws SQLException {
-        try(PreparedStatement stm = conexao.prepareStatement(
-                "SELECT * FROM T_SIF_INVESTIMENTO WHERE COD_INVESTIMENTO = ? AND COD_USUARIO = ?"
-        )) {
+        String sql = "SELECT * FROM T_SIF_INVESTIMENTO WHERE COD_INVESTIMENTO = ? AND COD_USUARIO = ?";
+
+        try(PreparedStatement stm = conexao.prepareStatement(sql)) {
             stm.setLong(1, idEntity);
             stm.setLong(2, idUser);
 
@@ -96,21 +103,22 @@ public class InvestimentoDAO implements CrudDAO<Investimento, Long> {
     }
 
     public void update(Investimento investimento) throws SQLException, EntityNotFoundException {
-        try(PreparedStatement stm = conexao.prepareStatement(
-                "UPDATE T_SIF_INVESTIMENTO SET " +
-                        "NOM_APLICACAO = ?, VAL_APLICACAO = ?, DES_INVESTIMENTO = ?, DAT_REALIZACAO = ?, DAT_VENCIMENTO = ? " +
-                        "WHERE COD_INVESTIMENTO = ? AND COD_USUARIO = ?"
-        )) {
+        String sql = "UPDATE T_SIF_INVESTIMENTO SET " + "NOM_APLICACAO = ?, VAL_APLICACAO = ?, DES_INVESTIMENTO = ?, DAT_REALIZACAO = ?, " +
+                "DAT_VENCIMENTO = ?, " + "COD_INSTITUICAO = ?, COD_TIPO_INVESTIMENTO = ? " +
+                "WHERE COD_INVESTIMENTO = ? AND COD_USUARIO = ?";
+
+        try(PreparedStatement stm = conexao.prepareStatement(sql)) {
             stm.setString(1, investimento.getNome());
             stm.setBigDecimal(2, investimento.getValor());
             stm.setString(3, investimento.getDescricao());
             stm.setDate(4, Date.valueOf(investimento.getDataRealizacao()));
             stm.setDate(5, Date.valueOf(investimento.getDataVencimento()));
-            stm.setLong(6, investimento.getId());
-            stm.setLong(7, investimento.getUsuarioId());
+            stm.setLong(6, investimento.getInstituicaoId());
+            stm.setLong(7, investimento.getCategoriaId());
+            stm.setLong(8, investimento.getId());
+            stm.setLong(9, investimento.getUsuarioId());
 
             int linhasAfetadas = stm.executeUpdate();
-
             if(linhasAfetadas == 0) {
                 throw new EntityNotFoundException("Erro: Investimento com ID " + investimento.getId() + " não foi encontrado para atualização!");
             }
@@ -118,7 +126,9 @@ public class InvestimentoDAO implements CrudDAO<Investimento, Long> {
     }
 
     public void remove(Long id) throws SQLException, EntityNotFoundException {
-        try(PreparedStatement stm = conexao.prepareStatement("DELETE FROM T_SIF_INVESTIMENTO WHERE COD_INVESTIMENTO = ?")) {
+        String sql = "DELETE FROM T_SIF_INVESTIMENTO WHERE COD_INVESTIMENTO = ?";
+
+        try(PreparedStatement stm = conexao.prepareStatement(sql)) {
             stm.setLong(1, id);
 
             int linha = stm.executeUpdate();
@@ -126,7 +136,8 @@ public class InvestimentoDAO implements CrudDAO<Investimento, Long> {
         }
     }
 
-    public void fecharConexao() throws SQLException {
+    @Override
+    public void close() throws SQLException {
         if(conexao != null) conexao.close();
     }
 }

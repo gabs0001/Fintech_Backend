@@ -4,6 +4,7 @@ import br.com.fintech.exceptions.EntityNotFoundException;
 import br.com.fintech.factory.ConnectionFactory;
 import br.com.fintech.model.Instituicao;
 
+import java.io.Closeable;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -11,7 +12,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class InstituicaoDAO implements CrudDAO<Instituicao, Long> {
+public class InstituicaoDAO implements CrudDAO<Instituicao, Long>, AutoCloseable {
     private final Connection conexao;
 
     public InstituicaoDAO() throws SQLException {
@@ -19,9 +20,9 @@ public class InstituicaoDAO implements CrudDAO<Instituicao, Long> {
     }
 
     public void insert(Instituicao instituicao) throws SQLException {
-        try(PreparedStatement stm = conexao.prepareStatement("INSERT INTO T_SIF_INSTITUICAO (COD_INSTITUICAO, NOM_INSTITUICAO) " +
-                "VALUES (SEQ_SIF_INSTITUICAO.NEXTVAL, ?)", new String[]{"COD_INSTITUICAO"}
-        )) {
+        String sql = "INSERT INTO T_SIF_INSTITUICAO (COD_INSTITUICAO, NOM_INSTITUICAO) " + "VALUES (SEQ_SIF_INSTITUICAO.NEXTVAL, ?)";
+
+        try(PreparedStatement stm = conexao.prepareStatement(sql, new String[]{"COD_INSTITUICAO"})) {
             stm.setString(1, instituicao.getNome());
 
             stm.executeUpdate();
@@ -43,7 +44,9 @@ public class InstituicaoDAO implements CrudDAO<Instituicao, Long> {
     }
 
     public List<Instituicao> getAll() throws SQLException {
-        try(PreparedStatement stm = conexao.prepareStatement("SELECT * FROM T_SIF_INSTITUICAO");
+        String sql = "SELECT * FROM T_SIF_INSTITUICAO";
+
+        try(PreparedStatement stm = conexao.prepareStatement(sql);
             ResultSet result = stm.executeQuery()
         ) {
             List<Instituicao> instituicoes = new ArrayList<>();
@@ -57,9 +60,9 @@ public class InstituicaoDAO implements CrudDAO<Instituicao, Long> {
     }
 
     public Instituicao getById(Long entityId, Long userId) throws SQLException {
-        try(PreparedStatement stm = conexao.prepareStatement(
-                "SELECT * FROM T_SIF_INSTITUICAO WHERE COD_INSTITUICAO = ?"
-        )) {
+        String sql = "SELECT * FROM T_SIF_INSTITUICAO WHERE COD_INSTITUICAO = ?";
+
+        try(PreparedStatement stm = conexao.prepareStatement(sql)) {
             stm.setLong(1, entityId);
 
             try(ResultSet result = stm.executeQuery()) {
@@ -70,21 +73,23 @@ public class InstituicaoDAO implements CrudDAO<Instituicao, Long> {
     }
 
     public void update(Instituicao instituicao) throws SQLException, EntityNotFoundException {
-        try(PreparedStatement stm = conexao.prepareStatement(
-                "UPDATE T_SIF_INSTITUICAO SET NOM_INSTITUICAO = ? WHERE COD_INSTITUICAO = ?"
-        )) {
+        String sql = "UPDATE T_SIF_INSTITUICAO SET NOM_INSTITUICAO = ? WHERE COD_INSTITUICAO = ?";
+
+        try(PreparedStatement stm = conexao.prepareStatement(sql)) {
             stm.setString(1, instituicao.getNome());
             stm.setLong(2, instituicao.getId());
 
             int linhasAfetadas = stm.executeUpdate();
             if(linhasAfetadas == 0) {
-                throw new EntityNotFoundException("Erro: Gasto com ID " + instituicao.getId() + " não foi encontrado para atualização!");
+                throw new EntityNotFoundException("Erro: Instituição com ID " + instituicao.getId() + " não foi encontrada para atualização!");
             }
         }
     }
 
     public void remove(Long id) throws SQLException, EntityNotFoundException {
-        try(PreparedStatement stm = conexao.prepareStatement("DELETE FROM T_SIF_INSTITUICAO WHERE COD_INSTITUICAO = ?")) {
+        String sql = "DELETE FROM T_SIF_INSTITUICAO WHERE COD_INSTITUICAO = ?";
+
+        try(PreparedStatement stm = conexao.prepareStatement(sql)) {
             stm.setLong(1, id);
 
             int linha = stm.executeUpdate();
@@ -92,7 +97,8 @@ public class InstituicaoDAO implements CrudDAO<Instituicao, Long> {
         }
     }
 
-    public void fecharConexao() throws SQLException {
+    @Override
+    public void close() throws SQLException {
         if(conexao != null) conexao.close();
     }
 }

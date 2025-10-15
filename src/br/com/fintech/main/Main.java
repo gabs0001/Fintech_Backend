@@ -7,7 +7,6 @@ import br.com.fintech.service.*;
 import java.sql.SQLException;
 
 public class Main {
-    // registros de teste criados no banco
     private static final Long USUARIO_ID_TESTE = 5L;
     private static final Long CATEGORIA_GASTO_ID = 3L;
     private static final Long CATEGORIA_RECEBIMENTO_ID = 2L;

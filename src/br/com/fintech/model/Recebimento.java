@@ -8,8 +8,8 @@ public class Recebimento extends Transacao {
 
     public Recebimento() {}
 
-    public Recebimento(Long id, Long usuarioId, String descricao, Long categoriaId, BigDecimal valor, LocalDate dataRecebimento) {
-        super(id, usuarioId, descricao, categoriaId, valor);
+    public Recebimento(Long id, Long usuarioId, String descricao, Categoria categoria, BigDecimal valor, LocalDate dataRecebimento) {
+        super(id, usuarioId, descricao, categoria, valor);
         this.dataRecebimento = dataRecebimento;
     }
 

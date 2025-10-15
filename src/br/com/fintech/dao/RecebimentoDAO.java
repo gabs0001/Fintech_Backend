@@ -2,6 +2,7 @@ package br.com.fintech.dao;
 
 import br.com.fintech.exceptions.EntityNotFoundException;
 import br.com.fintech.factory.ConnectionFactory;
+import br.com.fintech.model.Categoria;
 import br.com.fintech.model.Recebimento;
 
 import java.math.BigDecimal;
@@ -9,7 +10,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class RecebimentoDAO implements CrudDAO<Recebimento, Long> {
+public class RecebimentoDAO implements CrudDAO<Recebimento, Long>, AutoCloseable {
     private final Connection conexao;
 
     public RecebimentoDAO() throws SQLException {
@@ -47,7 +48,9 @@ public class RecebimentoDAO implements CrudDAO<Recebimento, Long> {
         Long codUsuario  = result.getLong("COD_USUARIO");
         Long codTipoRecebimento = result.getLong("COD_TIPO_RECEBIMENTO");
 
-        return new Recebimento(id, codUsuario, descricao, codTipoRecebimento, valor, dataRecebimento.toLocalDate());
+        Categoria categoria = new Categoria(codTipoRecebimento, null);
+
+        return new Recebimento(id, codUsuario, descricao, categoria, valor, dataRecebimento.toLocalDate());
     }
 
     public List<Recebimento> getAll() throws SQLException {
@@ -81,14 +84,15 @@ public class RecebimentoDAO implements CrudDAO<Recebimento, Long> {
     public void update(Recebimento recebimento) throws SQLException, EntityNotFoundException {
         try(PreparedStatement stm = conexao.prepareStatement(
                 "UPDATE T_SIF_RECEBIMENTO SET " +
-                        "VAL_RECEBIMENTO = ?, DES_RECEBIMENTO = ?, DAT_RECEBIMENTO = ? " +
+                        "VAL_RECEBIMENTO = ?, DES_RECEBIMENTO = ?, DAT_RECEBIMENTO = ?, COD_TIPO_RECEBIMENTO = ? " +
                     "WHERE COD_RECEBIMENTO = ? AND COD_USUARIO = ?"
         )) {
             stm.setBigDecimal(1, recebimento.getValor());
             stm.setString(2, recebimento.getDescricao());
             stm.setDate(3, Date.valueOf(recebimento.getDataRecebimento()));
-            stm.setLong(4, recebimento.getId());
-            stm.setLong(5, recebimento.getUsuarioId());
+            stm.setLong(4, recebimento.getCategoriaId());
+            stm.setLong(5, recebimento.getId());
+            stm.setLong(6, recebimento.getUsuarioId());
 
             int linhasAfetadas = stm.executeUpdate();
             if (linhasAfetadas == 0) {
@@ -106,7 +110,8 @@ public class RecebimentoDAO implements CrudDAO<Recebimento, Long> {
         }
     }
 
-    public void fecharConexao() throws SQLException {
+    @Override
+    public void close() throws SQLException {
         if(conexao != null) conexao.close();
     }
 }

@@ -8,8 +8,8 @@ public class Gasto extends Transacao {
 
     public Gasto() {}
 
-    public Gasto(Long id, Long usuarioId, String descricao, Long categoriaId, BigDecimal valor, LocalDate dataGasto) {
-        super(id, usuarioId, descricao, categoriaId, valor);
+    public Gasto(Long id, Long usuarioId, String descricao, Categoria categoria, BigDecimal valor, LocalDate dataGasto) {
+        super(id, usuarioId, descricao, categoria, valor);
         this.dataGasto = dataGasto;
     }
 

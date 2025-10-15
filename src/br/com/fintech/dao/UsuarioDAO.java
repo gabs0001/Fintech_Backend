@@ -8,7 +8,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class UsuarioDAO implements CrudDAO<Usuario, Long>{
+public class UsuarioDAO implements CrudDAO<Usuario, Long>, AutoCloseable {
     private final Connection conexao;
 
     public UsuarioDAO() throws SQLException {
@@ -16,10 +16,10 @@ public class UsuarioDAO implements CrudDAO<Usuario, Long>{
     }
 
     public void insert(Usuario usuario) throws SQLException {
-        try(PreparedStatement stm = conexao.prepareStatement(
-                "INSERT INTO T_SIF_USUARIO (COD_USUARIO, NOM_USUARIO, DAT_NASCIMENTO, DES_GENERO, TXT_EMAIL, TXT_SENHA) " +
-                        "VALUES (SEQ_SIF_USUARIO.NEXTVAL, ?,?,?,?,?)", new String[]{"COD_USUARIO"}
-        )) {
+        String sql = "INSERT INTO T_SIF_USUARIO (COD_USUARIO, NOM_USUARIO, DAT_NASCIMENTO, DES_GENERO, TXT_EMAIL, TXT_SENHA) " +
+                "VALUES (SEQ_SIF_USUARIO.NEXTVAL, ?,?,?,?,?)";
+
+        try(PreparedStatement stm = conexao.prepareStatement(sql, new String[]{"COD_USUARIO"})) {
             stm.setString(1, usuario.getNome());
             stm.setDate(2, Date.valueOf(usuario.getDataNascimento()));
             stm.setString(3, usuario.getGenero());
@@ -49,7 +49,9 @@ public class UsuarioDAO implements CrudDAO<Usuario, Long>{
     }
 
     public List<Usuario> getAll() throws SQLException {
-        try(PreparedStatement stm = conexao.prepareStatement("SELECT * FROM T_SIF_USUARIO");
+        String sql = "SELECT * FROM T_SIF_USUARIO";
+
+        try(PreparedStatement stm = conexao.prepareStatement(sql);
             ResultSet result = stm.executeQuery()) {
 
             List<Usuario> usuarios = new ArrayList<>();
@@ -63,7 +65,9 @@ public class UsuarioDAO implements CrudDAO<Usuario, Long>{
     }
 
     public Usuario getById(Long idEntity, Long idUser) throws SQLException {
-        try(PreparedStatement stm = conexao.prepareStatement("SELECT * FROM T_SIF_USUARIO WHERE COD_USUARIO = ?")) {
+        String sql = "SELECT * FROM T_SIF_USUARIO WHERE COD_USUARIO = ?";
+
+        try(PreparedStatement stm = conexao.prepareStatement(sql)) {
             stm.setLong(1, idEntity);
 
             try(ResultSet result = stm.executeQuery()) {
@@ -74,7 +78,9 @@ public class UsuarioDAO implements CrudDAO<Usuario, Long>{
     }
 
     public Usuario getByEmail(String email) throws SQLException {
-        try(PreparedStatement stm = conexao.prepareStatement("SELECT * FROM T_SIF_USUARIO WHERE TXT_EMAIL = ?")) {
+        String sql = "SELECT * FROM T_SIF_USUARIO WHERE TXT_EMAIL = ?";
+
+        try(PreparedStatement stm = conexao.prepareStatement(sql)) {
             stm.setString(1, email);
 
             try(ResultSet result = stm.executeQuery()) {
@@ -85,11 +91,10 @@ public class UsuarioDAO implements CrudDAO<Usuario, Long>{
     }
 
     public void update(Usuario usuario) throws SQLException, EntityNotFoundException {
-        try(PreparedStatement stm = conexao.prepareStatement(
-                "UPDATE T_SIF_USUARIO SET " +
-                        "NOM_USUARIO = ?, DAT_NASCIMENTO = ?, DES_GENERO = ?, TXT_EMAIL = ?, TXT_SENHA = ? " +
-                        "WHERE COD_USUARIO = ?"
-        )) {
+        String sql = "UPDATE T_SIF_USUARIO SET " + "NOM_USUARIO = ?, DAT_NASCIMENTO = ?, DES_GENERO = ?, TXT_EMAIL = ?, TXT_SENHA = ? " +
+                "WHERE COD_USUARIO = ?";
+
+        try(PreparedStatement stm = conexao.prepareStatement(sql)) {
             stm.setString(1, usuario.getNome());
             stm.setDate(2, Date.valueOf(usuario.getDataNascimento()));
             stm.setString(3, usuario.getGenero());
@@ -104,7 +109,9 @@ public class UsuarioDAO implements CrudDAO<Usuario, Long>{
     }
 
     public void remove(Long id) throws SQLException, EntityNotFoundException {
-        try(PreparedStatement stm = conexao.prepareStatement("DELETE FROM T_SIF_USUARIO WHERE COD_USUARIO = ?")) {
+        String sql = "DELETE FROM T_SIF_USUARIO WHERE COD_USUARIO = ?";
+
+        try(PreparedStatement stm = conexao.prepareStatement(sql)) {
             stm.setLong(1, id);
 
             int linha = stm.executeUpdate();
@@ -112,7 +119,8 @@ public class UsuarioDAO implements CrudDAO<Usuario, Long>{
         }
     }
 
-    public void fecharConexao() throws SQLException {
+    @Override
+    public void close() throws SQLException {
         if(conexao != null) conexao.close();
     }
 }

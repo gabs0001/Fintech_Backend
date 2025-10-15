@@ -2,6 +2,8 @@ package br.com.fintech.service;
 
 import br.com.fintech.dao.InvestimentoDAO;
 import br.com.fintech.exceptions.EntityNotFoundException;
+import br.com.fintech.model.Categoria;
+import br.com.fintech.model.Instituicao;
 import br.com.fintech.model.Investimento;
 
 import java.sql.SQLException;
@@ -22,6 +24,20 @@ public class InvestimentoService extends CrudService<Investimento, Long> {
 
         if(novoInvestimento.getDataVencimento().isBefore(LocalDate.now())) {
             throw new IllegalArgumentException("Erro: A data de vencimento do investimento deve ser uma data futura!");
+        }
+
+        Instituicao instituicao = novoInvestimento.getInstituicao();
+        if(instituicao == null || instituicao.getId() == null || instituicao.getId() <= 0) {
+            throw new IllegalArgumentException("Erro: O investimento deve estar vinculado a uma instituição válida!");
+        }
+
+        Categoria categoria = novoInvestimento.getCategoria();
+        if(categoria == null || categoria.getId() == null || categoria.getId() <= 0) {
+            throw new IllegalArgumentException("Erro: O investimento deve estar vinculado a uma categoria válida!");
+        }
+
+        if(novoInvestimento.getNome() == null || novoInvestimento.getNome().trim().isEmpty()) {
+            throw new IllegalArgumentException("Erro: O nome do investimento é obrigatório!");
         }
     }
 

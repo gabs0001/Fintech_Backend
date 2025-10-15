@@ -6,18 +6,17 @@ public abstract class Transacao {
     private Long id;
     private Long usuarioId;
     private String descricao;
-    private Long categoriaId;
+    private Categoria categoria;
     private BigDecimal valor;
 
     public Transacao() {}
 
-    public Transacao(Long id, Long usuarioId, String descricao, Long categoriaId, BigDecimal valor) {
+    public Transacao(Long id, Long usuarioId, String descricao, Categoria categoria, BigDecimal valor) {
         this.id = id;
         this.usuarioId = usuarioId;
         this.descricao = descricao;
 
-        //vai virar classe!
-        this.categoriaId = categoriaId;
+        this.categoria = categoria;
 
         this.valor = valor;
     }
@@ -28,7 +27,11 @@ public abstract class Transacao {
 
     public String getDescricao() { return this.descricao; }
 
-    public Long getCategoriaId() { return this.categoriaId; }
+    public Categoria getCategoria() { return this.categoria; }
+
+    public Long getCategoriaId() {
+        return this.categoria != null ? this.categoria.getId() : null;
+    }
 
     public BigDecimal getValor() { return this.valor; }
 
@@ -38,7 +41,7 @@ public abstract class Transacao {
 
     public void setDescricao(String descricao) { this.descricao = descricao; }
 
-    public void setCategoria(Long categoriaId) { this.categoriaId = categoriaId; }
+    public void setCategoria(Categoria categoria) { this.categoria = categoria; }
 
     public void setValor(BigDecimal valor) { this.valor = valor; }
 
@@ -54,7 +57,7 @@ public abstract class Transacao {
                 "id=" + id +
                 ", usuario=" + usuarioId +
                 ", descricao='" + descricao + '\'' +
-                ", categoria='" + categoriaId + '\'' +
+                ", categoria='" + (categoria != null ? categoria.getDescricao() : "N/A") + '\'' +
                 ", valor=" + valor +
                 '}';
     }
