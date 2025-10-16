@@ -1,9 +1,7 @@
 package br.com.fintech.main;
 
-import br.com.fintech.dao.GastoDAO;
-import br.com.fintech.dao.InstituicaoDAO;
-import br.com.fintech.dao.RecebimentoDAO;
-import br.com.fintech.dao.UsuarioDAO;
+import br.com.fintech.dao.*;
+import br.com.fintech.dto.DashboardDTO;
 import br.com.fintech.exceptions.EntityNotFoundException;
 import br.com.fintech.model.Categoria;
 import br.com.fintech.model.Gasto;
@@ -12,9 +10,10 @@ import br.com.fintech.model.Investimento;
 import br.com.fintech.model.Recebimento;
 import br.com.fintech.model.Usuario;
 import br.com.fintech.service.GastoService;
-import br.com.fintech.service.InstituicaoService; // NOVO IMPORT
-import br.com.fintech.service.InvestimentoService; // NOVO IMPORT
+import br.com.fintech.service.InstituicaoService;
+import br.com.fintech.service.InvestimentoService;
 import br.com.fintech.service.RecebimentoService;
+import br.com.fintech.service.RelatorioService;
 import br.com.fintech.service.UsuarioService;
 
 import java.math.BigDecimal;
@@ -23,7 +22,6 @@ import java.time.LocalDate;
 import java.util.List;
 
 public class FintechTestRunner {
-
     // --- MÉTODOS DE TESTE DE DOMÍNIO ---
     public static Instituicao testeInstituicaoInsert(InstituicaoService instituicaoService) throws SQLException {
         System.out.println("\n--- INSERINDO INSTITUIÇÃO DE TESTE ---");
@@ -95,11 +93,12 @@ public class FintechTestRunner {
     public static void testeRecebimentoCrud(RecebimentoService recebimentoService, Long userId, Categoria categoria) throws SQLException, EntityNotFoundException, IllegalArgumentException {
         System.out.println("\n--- INSERINDO 3 NOVOS RECEBIMENTOS ---");
 
-        Recebimento r1 = new Recebimento(null, userId, "Salário", categoria, new BigDecimal("5000.00"),
+        // Ajuste nas datas de recebimento para testar o Balanço Período (que é em Jan/2025)
+        Recebimento r1 = new Recebimento(null, userId, "Salário (Fora do Período)", categoria, new BigDecimal("5000.00"),
                 LocalDate.of(2025, 10, 30));
-        Recebimento r2 = new Recebimento(null, userId, "Renda Extra", categoria, new BigDecimal("800.50"),
+        Recebimento r2 = new Recebimento(null, userId, "Renda Extra (Fora do Período)", categoria, new BigDecimal("800.50"),
                 LocalDate.of(2025, 11, 5));
-        Recebimento r3 = new Recebimento(null, userId, "Reembolso", categoria, new BigDecimal("150.00"),
+        Recebimento r3 = new Recebimento(null, userId, "Reembolso (Fora do Período)", categoria, new BigDecimal("150.00"),
                 LocalDate.of(2025, 11, 10));
 
         recebimentoService.insert(r1);
@@ -148,7 +147,7 @@ public class FintechTestRunner {
     public static void testeInvestimentoCrud(InvestimentoService investimentoService, Long userId, Categoria categoria, Instituicao instituicao) throws SQLException, EntityNotFoundException, IllegalArgumentException {
         System.out.println("\n--- INICIANDO TESTES DE INVESTIMENTO ---");
 
-        // 1. INSERT
+        // 1. INSERT (MANTIDO para o teste de Relatório de Saldo Geral e Investido)
         Investimento i1 = new Investimento(null, userId, "CDB 100% CDI", categoria, new BigDecimal("1000.00"),
                 "CDB", LocalDate.now(), LocalDate.now().plusYears(1), instituicao);
 
@@ -162,13 +161,49 @@ public class FintechTestRunner {
         // 3. UPDATE
         i1.setNome("CDB 110% CDI (Atualizado)");
         i1.setValor(new BigDecimal("1100.00"));
-        // i1.setInstituicao(instituicaoSecundaria); // Testar a mudança de instituição
         investimentoService.update(i1);
         System.out.println("✅ Investimento " + i1.getId() + " atualizado.");
 
-        // 4. REMOVE
-        investimentoService.remove(i1.getId(), userId);
-        System.out.println("✅ Investimento " + i1.getId() + " removido.");
+        // 4. REMOVE (COMENTADO para que o Total Investido no Relatório não seja ZERO)
+        // investimentoService.remove(i1.getId(), userId);
+        // System.out.println("✅ Investimento " + i1.getId() + " removido.");
+
+        System.out.println("-----------------------------------------------------------------");
+    }
+
+    // --- MÉTODOS DE TESTE DE RELATÓRIO ---
+    public static void testeRelatorioDashboard(RelatorioService relatorioService, Long userId) throws SQLException {
+        System.out.println("\n--- INICIANDO TESTE DO RELATORIO (DASHBOARD) ---");
+
+        // Definir o período para teste de saldo (Ex: Mês de Janeiro/2025)
+        LocalDate inicioPeriodo = LocalDate.of(2025, 1, 1);
+        LocalDate fimPeriodo = LocalDate.of(2025, 1, 31);
+        int limite = 3; // Limitar as listas
+
+        System.out.println("Calculando Dashboard para o período: " + inicioPeriodo + " a " + fimPeriodo);
+
+        // CHAMA O METODO ORQUESTRADOR
+        DashboardDTO dashboard = relatorioService.getDashboard(userId, limite, inicioPeriodo, fimPeriodo);
+
+        // --- VALIDAÇÃO E EXIBIÇÃO DOS RESULTADOS ---
+
+        // 1. Saldo Geral (acumulado):
+        System.out.println("\n✅ Saldo Geral (Total Acumulado): R$ " + dashboard.getSaldoGeral());
+
+        // 2. Saldo por Período (Jan/2025):
+        // Esperado: -735.50 (Gastos em Jan: 350.50 + 85.00 + 200.00 + 100.00)
+        System.out.println("✅ Saldo Período (" + inicioPeriodo.getYear() + "): R$ " + dashboard.getSaldoPeriodo());
+
+        // 3. Total Investido
+        // Esperado: 1100.00 (Valor após o UPDATE do Investimento)
+        System.out.println("✅ Total Investido: R$ " + dashboard.getTotalInvestido());
+
+        // 4. Último Gasto (Mais recente): Deve ser o de Julho (400.00)
+        System.out.println("\n✅ Último Gasto: " + (dashboard.getUltimoGasto() != null ? dashboard.getUltimoGasto().getDescricao() + " (" + dashboard.getUltimoGasto().getDataGasto() + ")" : "N/A"));
+
+        // 5. Últimos Recebimentos (Lista)
+        System.out.println("\n✅ Top " + limite + " Últimos Recebimentos:");
+        dashboard.getUltimosRecebimentos().forEach(r -> System.out.println("  - " + r.getDescricao() + " (" + r.getValor() + ")"));
 
         System.out.println("-----------------------------------------------------------------");
     }
@@ -217,11 +252,12 @@ public class FintechTestRunner {
         }
     }
 
-    public static void fecharConexoes(GastoDAO gastoDAO, RecebimentoDAO recebimentoDAO, UsuarioDAO usuarioDAO, InstituicaoDAO instituicaoDAO) {
+    public static void fecharConexoes(GastoDAO gastoDAO, RecebimentoDAO recebimentoDAO, UsuarioDAO usuarioDAO, InstituicaoDAO instituicaoDAO, InvestimentoDAO investimentoDAO) {
         fecharConexao(gastoDAO);
         fecharConexao(recebimentoDAO);
         fecharConexao(usuarioDAO);
         fecharConexao(instituicaoDAO);
+        fecharConexao(investimentoDAO);
 
         System.out.println("\nTodas as conexões foram fechadas!");
     }

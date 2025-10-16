@@ -3,6 +3,7 @@ package br.com.fintech.service;
 import br.com.fintech.dao.GastoDAO;
 import br.com.fintech.dao.InvestimentoDAO;
 import br.com.fintech.dao.RecebimentoDAO;
+import br.com.fintech.dto.DashboardDTO;
 import br.com.fintech.model.Gasto;
 import br.com.fintech.model.Investimento;
 import br.com.fintech.model.Recebimento;
@@ -119,5 +120,26 @@ public class RelatorioService {
                 .sorted(Comparator.comparing(Recebimento::getDataRecebimento).reversed())
                 .limit(limite)
                 .collect(Collectors.toList());
+    }
+
+    public DashboardDTO getDashboard(Long userId, int limite, LocalDate inicio, LocalDate fim) throws SQLException {
+        BigDecimal saldoGeral = this.calcularSaldoGeral(userId);
+        BigDecimal saldoPeriodo = this.calcularSaldoPeriodo(userId, inicio, fim);
+        BigDecimal totalInvestido = this.calcularTotalInvestido(userId);
+        Gasto ultimoGasto = this.getUltimoGasto(userId);
+        List<Gasto> ultimosGastos = this.getUltimosGastos(userId, limite);
+        Recebimento ultimoRecebimento = this.getUltimoRecebimento(userId);
+        List<Recebimento> ultimosRecebimentos = this.getUltimosRecebimentos(userId, limite);
+
+        return new DashboardDTO(
+                saldoGeral,
+                saldoPeriodo,
+                totalInvestido,
+                ultimoGasto,
+                ultimosGastos,
+                ultimoRecebimento,
+                ultimosRecebimentos,
+                userId
+        );
     }
 }
