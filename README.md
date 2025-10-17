@@ -2,7 +2,7 @@
 
 ## 🎯 Sobre o Projeto
 
-Este repositório contém o código-fonte do *backend* do projeto **Fintech** — um sistema acadêmico individual desenvolvido para a **FIAP** com o objetivo de fornecer aos usuários uma ferramenta completa de **gerenciamento de finanças pessoais**.
+Este repositório contém o código-fonte do *backend* do projeto **Fintech** — um projeto acadêmico da **FIAP** desenvolvido com o objetivo de fornecer aos usuários uma ferramenta completa de **gerenciamento de finanças pessoais**.
 
 O sistema permitirá um controle detalhado da vida financeira do usuário, abrangendo:
 
