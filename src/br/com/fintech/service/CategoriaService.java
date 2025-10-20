@@ -3,13 +3,17 @@ package br.com.fintech.service;
 import br.com.fintech.dao.CategoriaBaseDAO;
 import br.com.fintech.exceptions.EntityNotFoundException;
 import br.com.fintech.model.Categoria;
+import org.springframework.stereotype.Service;
 
 import java.sql.SQLException;
+import java.util.List;
 
-public class CategoriaService extends CrudService<Categoria, Long> {
+@Service
+public class CategoriaService {
+    private final CategoriaBaseDAO dao;
 
-    public CategoriaService(CategoriaBaseDAO categoriaBaseDAO) {
-        super(categoriaBaseDAO);
+    public CategoriaService(CategoriaBaseDAO dao) {
+        this.dao = dao;
     }
 
     private void validarCategoria(Categoria categoria) throws IllegalArgumentException {
@@ -18,13 +22,25 @@ public class CategoriaService extends CrudService<Categoria, Long> {
         }
     }
 
-    public void insert(Categoria novaCategoria) throws SQLException, IllegalArgumentException {
-        validarCategoria(novaCategoria);
-        super.insert(novaCategoria);
+    public List<Categoria> getAll() throws SQLException {
+        return dao.getAll();
     }
 
-    public void update(Categoria categoriaParaAlterar) throws SQLException, EntityNotFoundException, IllegalArgumentException {
+    public Categoria getById(Long entityId) throws SQLException {
+        return dao.getById(entityId);
+    }
+
+    public Categoria insert(Categoria novaCategoria) throws SQLException {
+        validarCategoria(novaCategoria);
+        return dao.insert(novaCategoria);
+    }
+
+    public Categoria update(Long idEntity, Categoria categoriaParaAlterar) throws SQLException, EntityNotFoundException {
         validarCategoria(categoriaParaAlterar);
-        super.update(categoriaParaAlterar);
+        return dao.update(idEntity, categoriaParaAlterar);
+    }
+
+    public void remove(Long id) throws SQLException, EntityNotFoundException {
+        dao.remove(id);
     }
 }

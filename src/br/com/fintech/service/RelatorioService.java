@@ -7,6 +7,7 @@ import br.com.fintech.dto.DashboardDTO;
 import br.com.fintech.model.Gasto;
 import br.com.fintech.model.Investimento;
 import br.com.fintech.model.Recebimento;
+import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@Service
 public class RelatorioService {
     private final GastoDAO gastoDAO;
     private final RecebimentoDAO recebimentoDAO;

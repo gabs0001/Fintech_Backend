@@ -3,6 +3,7 @@ package br.com.fintech.dao;
 import br.com.fintech.exceptions.EntityNotFoundException;
 import br.com.fintech.factory.ConnectionFactory;
 import br.com.fintech.model.Categoria;
+import org.springframework.stereotype.Repository;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -11,7 +12,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class CategoriaBaseDAO implements CrudDAO<Categoria, Long>, AutoCloseable {
+@Repository
+public abstract class CategoriaBaseDAO implements AutoCloseable {
     protected final String nomeTabela;
     protected final String nomePk;
     protected final String nomeSequencia;
@@ -26,9 +28,9 @@ public abstract class CategoriaBaseDAO implements CrudDAO<Categoria, Long>, Auto
         this.conexao = ConnectionFactory.getConnection();
     }
 
-    public void insert(Categoria categoria) throws SQLException {
-        String sql = "INSERT INTO " + this.nomeTabela + "(" + this.nomePk + ", " + this.descricaoColuna + ") VALUES (" + this.nomeSequencia +
-                ".NEXTVAL, ?)";
+    public Categoria insert(Categoria categoria) throws SQLException {
+        String sql = "INSERT INTO " + this.nomeTabela + "(" + this.nomePk + ", " + this.descricaoColuna
+                + ") VALUES (" + this.nomeSequencia + ".NEXTVAL, ?)";
 
         try(PreparedStatement stm = conexao.prepareStatement(sql, new String[]{ this.nomePk })) {
             stm.setString(1, categoria.getDescricao());
@@ -41,6 +43,8 @@ public abstract class CategoriaBaseDAO implements CrudDAO<Categoria, Long>, Auto
                     categoria.setId(novoId);
                 }
             }
+
+            return categoria;
         }
     }
 
@@ -54,20 +58,20 @@ public abstract class CategoriaBaseDAO implements CrudDAO<Categoria, Long>, Auto
     public List<Categoria> getAll() throws SQLException {
         String sql = "SELECT * FROM " + this.nomeTabela;
 
-        try(PreparedStatement stm = conexao.prepareStatement(sql);
-            ResultSet result = stm.executeQuery()
-        ) {
+        try(PreparedStatement stm = conexao.prepareStatement(sql)) {
+
             List<Categoria> categorias = new ArrayList<>();
 
-            while(result.next()) {
-                categorias.add(parseCategoria(result));
+            try(ResultSet result = stm.executeQuery()) {
+                while (result.next()) {
+                    categorias.add(parseCategoria(result));
+                }
+                return categorias;
             }
-
-            return categorias;
         }
     }
 
-    public Categoria getById(Long entityId, Long userId) throws SQLException {
+    public Categoria getById(Long entityId) throws SQLException {
         String sql = "SELECT * FROM " + this.nomeTabela + " WHERE " + this.nomePk + " = ?";
 
         try(PreparedStatement stm = conexao.prepareStatement(sql)) {
@@ -80,17 +84,21 @@ public abstract class CategoriaBaseDAO implements CrudDAO<Categoria, Long>, Auto
         }
     }
 
-    public void update(Categoria categoria) throws SQLException, EntityNotFoundException {
-        String sql = "UPDATE " + this.nomeTabela + " SET " + this.descricaoColuna + " = ? WHERE " + this.nomePk + " = ?";
+    public Categoria update(Long idEntity, Categoria categoria) throws SQLException, EntityNotFoundException {
+        String sql = "UPDATE " + this.nomeTabela + " SET " + this.descricaoColuna + " = ? WHERE "
+                + this.nomePk + " = ?";
 
         try(PreparedStatement stm = conexao.prepareStatement(sql)) {
             stm.setString(1, categoria.getDescricao());
-            stm.setLong(2, categoria.getId());
+            stm.setLong(2, idEntity);
 
             int linhasAfetadas = stm.executeUpdate();
             if (linhasAfetadas == 0) {
-                throw new EntityNotFoundException("Erro: Categoria com ID " + categoria.getId() + " não foi encontrada para atualização!");
+                throw new EntityNotFoundException("Erro: Categoria com ID " + categoria.getId()
+                        + " não foi encontrada para atualização!");
             }
+
+            return categoria;
         }
     }
 

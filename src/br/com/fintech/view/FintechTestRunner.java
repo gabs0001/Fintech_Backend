@@ -1,4 +1,4 @@
-package br.com.fintech.main;
+package br.com.fintech.view;
 
 import br.com.fintech.dao.*;
 import br.com.fintech.dto.DashboardDTO;

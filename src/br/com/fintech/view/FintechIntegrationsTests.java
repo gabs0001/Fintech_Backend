@@ -1,4 +1,4 @@
-package br.com.fintech.main;
+package br.com.fintech.view;
 
 import br.com.fintech.dao.*;
 import br.com.fintech.exceptions.EntityNotFoundException;
@@ -8,7 +8,7 @@ import br.com.fintech.service.*;
 
 import java.sql.SQLException;
 
-public class Main {
+public class FintechIntegrationsTests {
     private static final Long USUARIO_ID_TESTE = 1L;
     private static final Long CATEGORIA_GASTO_ID = 1L;
     private static final Long CATEGORIA_RECEBIMENTO_ID = 1L;

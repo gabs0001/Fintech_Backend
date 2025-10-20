@@ -3,6 +3,7 @@ package br.com.fintech.dao;
 import br.com.fintech.exceptions.EntityNotFoundException;
 import br.com.fintech.factory.ConnectionFactory;
 import br.com.fintech.model.ObjetivoFinanceiro;
+import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.sql.*;
@@ -10,6 +11,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+@Repository
 public class ObjetivoFinanceiroDAO implements CrudDAO<ObjetivoFinanceiro, Long>, AutoCloseable {
     private final Connection conexao;
 
@@ -17,7 +19,7 @@ public class ObjetivoFinanceiroDAO implements CrudDAO<ObjetivoFinanceiro, Long>,
         conexao = ConnectionFactory.getConnection();
     }
 
-    public void insert(ObjetivoFinanceiro objetivoFinanceiro) throws SQLException {
+    public ObjetivoFinanceiro insert(ObjetivoFinanceiro objetivoFinanceiro) throws SQLException {
         String sql = "INSERT INTO T_SIF_OBJETIVO_FINANCEIRO (COD_OBJETIVO, NOM_OBJETIVO, DES_OBJETIVO, VAL_OBJETIVO, DAT_CONCLUSAO_OBJETIVO, COD_USUARIO) " +
                 "VALUES (SEQ_SIF_OBJETIVO_FINANCEIRO.NEXTVAL, ?,?,?,?,?)";
 
@@ -36,6 +38,8 @@ public class ObjetivoFinanceiroDAO implements CrudDAO<ObjetivoFinanceiro, Long>,
                     objetivoFinanceiro.setId(novoId);
                 }
             }
+
+            return objetivoFinanceiro;
         }
     }
 
@@ -52,19 +56,22 @@ public class ObjetivoFinanceiroDAO implements CrudDAO<ObjetivoFinanceiro, Long>,
         return new ObjetivoFinanceiro(id, idUsuario, nome, descricao, valor, novaDataConclusao);
     }
 
-    public List<ObjetivoFinanceiro> getAll() throws SQLException {
-        String sql = "SELECT * FROM T_SIF_OBJETIVO_FINANCEIRO";
+    public List<ObjetivoFinanceiro> getAllByUserId(Long userId) throws SQLException {
+        String sql = "SELECT * FROM T_SIF_OBJETIVO_FINANCEIRO WHERE COD_USUARIO = ?";
 
-        try(PreparedStatement stm = conexao.prepareStatement(sql);
-            ResultSet result = stm.executeQuery()) {
+        try(PreparedStatement stm = conexao.prepareStatement(sql)) {
+            stm.setLong(1, userId);
 
             List<ObjetivoFinanceiro> objetivosFinanceiros = new ArrayList<>();
 
-            while(result.next()) {
-                objetivosFinanceiros.add(parseObjetivo(result));
-            }
+            try(ResultSet result = stm.executeQuery()) {
 
-            return objetivosFinanceiros;
+                while (result.next()) {
+                    objetivosFinanceiros.add(parseObjetivo(result));
+                }
+
+                return objetivosFinanceiros;
+            }
         }
     }
 
@@ -82,7 +89,7 @@ public class ObjetivoFinanceiroDAO implements CrudDAO<ObjetivoFinanceiro, Long>,
         }
     }
 
-    public void update(ObjetivoFinanceiro objetivoFinanceiro) throws SQLException, EntityNotFoundException {
+    public ObjetivoFinanceiro update(Long userId, ObjetivoFinanceiro objetivoFinanceiro) throws SQLException, EntityNotFoundException {
         String sql = "UPDATE T_SIF_OBJETIVO_FINANCEIRO SET NOM_OBJETIVO = ?, DES_OBJETIVO = ?, VAL_OBJETIVO = ?, DAT_CONCLUSAO = ? " +
                 "WHERE COD_OBJETIVO = ? AND COD_USUARIO = ?";
 
@@ -92,13 +99,15 @@ public class ObjetivoFinanceiroDAO implements CrudDAO<ObjetivoFinanceiro, Long>,
             stm.setBigDecimal(3, objetivoFinanceiro.getValor());
             stm.setDate(4, Date.valueOf(objetivoFinanceiro.getDataConclusao()));
             stm.setLong(5, objetivoFinanceiro.getId());
-            stm.setLong(6, objetivoFinanceiro.getUsuarioId());
+            stm.setLong(6, userId);
 
             int linhasAfetadas = stm.executeUpdate();
             if(linhasAfetadas == 0) {
                 throw new EntityNotFoundException("Erro: Objetivo Financeiro com ID " + objetivoFinanceiro.getId() +
                         " não foi encontrado para atualização!");
             }
+
+            return objetivoFinanceiro;
         }
     }
 

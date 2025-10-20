@@ -3,10 +3,12 @@ package br.com.fintech.service;
 import br.com.fintech.dao.RecebimentoDAO;
 import br.com.fintech.exceptions.EntityNotFoundException;
 import br.com.fintech.model.Recebimento;
+import org.springframework.stereotype.Service;
 
 import java.sql.SQLException;
 import java.time.LocalDate;
 
+@Service
 public class RecebimentoService extends CrudService<Recebimento, Long>{
 
     public RecebimentoService(RecebimentoDAO recebimentoDAO) {
@@ -23,13 +25,13 @@ public class RecebimentoService extends CrudService<Recebimento, Long>{
         }
     }
 
-    public void insert(Recebimento novoRecebimento) throws SQLException, IllegalArgumentException {
+    public Recebimento insert(Recebimento novoRecebimento) throws SQLException, IllegalArgumentException {
         validarRecebimento(novoRecebimento);
-        super.insert(novoRecebimento);
+        return super.insert(novoRecebimento);
     }
 
-    public void update(Recebimento recebimentoParaAlterar) throws SQLException, EntityNotFoundException, IllegalArgumentException {
+    public Recebimento update(Long userId, Recebimento recebimentoParaAlterar) throws SQLException, EntityNotFoundException, IllegalArgumentException {
         validarRecebimento(recebimentoParaAlterar);
-        super.update(recebimentoParaAlterar);
+        return super.update(userId, recebimentoParaAlterar);
     }
 }

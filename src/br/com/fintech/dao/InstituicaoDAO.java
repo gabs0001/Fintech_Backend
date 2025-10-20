@@ -3,6 +3,7 @@ package br.com.fintech.dao;
 import br.com.fintech.exceptions.EntityNotFoundException;
 import br.com.fintech.factory.ConnectionFactory;
 import br.com.fintech.model.Instituicao;
+import org.springframework.stereotype.Repository;
 
 import java.io.Closeable;
 import java.sql.Connection;
@@ -12,14 +13,15 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class InstituicaoDAO implements CrudDAO<Instituicao, Long>, AutoCloseable {
+@Repository
+public class InstituicaoDAO implements AutoCloseable {
     private final Connection conexao;
 
     public InstituicaoDAO() throws SQLException {
         conexao = ConnectionFactory.getConnection();
     }
 
-    public void insert(Instituicao instituicao) throws SQLException {
+    public Instituicao insert(Instituicao instituicao) throws SQLException {
         String sql = "INSERT INTO T_SIF_INSTITUICAO (COD_INSTITUICAO, NOM_INSTITUICAO) " + "VALUES (SEQ_SIF_INSTITUICAO.NEXTVAL, ?)";
 
         try(PreparedStatement stm = conexao.prepareStatement(sql, new String[]{"COD_INSTITUICAO"})) {
@@ -33,6 +35,8 @@ public class InstituicaoDAO implements CrudDAO<Instituicao, Long>, AutoCloseable
                     instituicao.setId(novoId);
                 }
             }
+
+            return instituicao;
         }
     }
 
@@ -59,7 +63,7 @@ public class InstituicaoDAO implements CrudDAO<Instituicao, Long>, AutoCloseable
         }
     }
 
-    public Instituicao getById(Long entityId, Long userId) throws SQLException {
+    public Instituicao getById(Long entityId) throws SQLException {
         String sql = "SELECT * FROM T_SIF_INSTITUICAO WHERE COD_INSTITUICAO = ?";
 
         try(PreparedStatement stm = conexao.prepareStatement(sql)) {
@@ -72,17 +76,19 @@ public class InstituicaoDAO implements CrudDAO<Instituicao, Long>, AutoCloseable
         }
     }
 
-    public void update(Instituicao instituicao) throws SQLException, EntityNotFoundException {
+    public Instituicao update( Long idEntity, Instituicao instituicao) throws SQLException, EntityNotFoundException {
         String sql = "UPDATE T_SIF_INSTITUICAO SET NOM_INSTITUICAO = ? WHERE COD_INSTITUICAO = ?";
 
         try(PreparedStatement stm = conexao.prepareStatement(sql)) {
             stm.setString(1, instituicao.getNome());
-            stm.setLong(2, instituicao.getId());
+            stm.setLong(2, idEntity);
 
             int linhasAfetadas = stm.executeUpdate();
             if(linhasAfetadas == 0) {
                 throw new EntityNotFoundException("Erro: Instituição com ID " + instituicao.getId() + " não foi encontrada para atualização!");
             }
+
+            return instituicao;
         }
     }
 

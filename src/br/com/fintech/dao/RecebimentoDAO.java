@@ -4,12 +4,14 @@ import br.com.fintech.exceptions.EntityNotFoundException;
 import br.com.fintech.factory.ConnectionFactory;
 import br.com.fintech.model.Categoria;
 import br.com.fintech.model.Recebimento;
+import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
+@Repository
 public class RecebimentoDAO implements CrudDAO<Recebimento, Long>, AutoCloseable {
     private final Connection conexao;
 
@@ -17,7 +19,7 @@ public class RecebimentoDAO implements CrudDAO<Recebimento, Long>, AutoCloseable
         conexao = ConnectionFactory.getConnection();
     }
 
-    public void insert(Recebimento recebimento) throws SQLException {
+    public Recebimento insert(Recebimento recebimento) throws SQLException {
         try(PreparedStatement stm = conexao.prepareStatement(
                 "INSERT INTO T_SIF_RECEBIMENTO (" +
                         "COD_RECEBIMENTO, VAL_RECEBIMENTO, DES_RECEBIMENTO, DAT_RECEBIMENTO, COD_USUARIO, COD_TIPO_RECEBIMENTO) " +
@@ -37,6 +39,8 @@ public class RecebimentoDAO implements CrudDAO<Recebimento, Long>, AutoCloseable
                     recebimento.setId(novoId);
                 }
             }
+
+            return recebimento;
         }
     }
 
@@ -53,17 +57,20 @@ public class RecebimentoDAO implements CrudDAO<Recebimento, Long>, AutoCloseable
         return new Recebimento(id, codUsuario, descricao, categoria, valor, dataRecebimento.toLocalDate());
     }
 
-    public List<Recebimento> getAll() throws SQLException {
-        try(PreparedStatement stm = conexao.prepareStatement("SELECT * FROM T_SIF_RECEBIMENTO");
-            ResultSet result = stm.executeQuery()) {
+    public List<Recebimento> getAllByUserId(Long userId) throws SQLException {
+        try(PreparedStatement stm = conexao.prepareStatement("SELECT * FROM T_SIF_RECEBIMENTO WHERE COD_USUARIO = ?")) {
+            stm.setLong(1, userId);
 
-            List<Recebimento> recebimentos = new ArrayList<>();
+            try(ResultSet result = stm.executeQuery()) {
 
-            while (result.next()) {
-                recebimentos.add(parseRecebimento(result));
+                List<Recebimento> recebimentos = new ArrayList<>();
+
+                while (result.next()) {
+                    recebimentos.add(parseRecebimento(result));
+                }
+
+                return recebimentos;
             }
-
-            return recebimentos;
         }
     }
 
@@ -81,7 +88,7 @@ public class RecebimentoDAO implements CrudDAO<Recebimento, Long>, AutoCloseable
         }
     }
 
-    public void update(Recebimento recebimento) throws SQLException, EntityNotFoundException {
+    public Recebimento update(Long userId, Recebimento recebimento) throws SQLException, EntityNotFoundException {
         try(PreparedStatement stm = conexao.prepareStatement(
                 "UPDATE T_SIF_RECEBIMENTO SET " +
                         "VAL_RECEBIMENTO = ?, DES_RECEBIMENTO = ?, DAT_RECEBIMENTO = ?, COD_TIPO_RECEBIMENTO = ? " +
@@ -92,12 +99,14 @@ public class RecebimentoDAO implements CrudDAO<Recebimento, Long>, AutoCloseable
             stm.setDate(3, Date.valueOf(recebimento.getDataRecebimento()));
             stm.setLong(4, recebimento.getCategoriaId());
             stm.setLong(5, recebimento.getId());
-            stm.setLong(6, recebimento.getUsuarioId());
+            stm.setLong(6, userId);
 
             int linhasAfetadas = stm.executeUpdate();
             if (linhasAfetadas == 0) {
                 throw new EntityNotFoundException("Erro: Recebimento com ID " + recebimento.getId() + " não foi encontrado para atualização!");
             }
+
+            return recebimento;
         }
     }
 

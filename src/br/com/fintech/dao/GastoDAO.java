@@ -4,6 +4,7 @@ import br.com.fintech.exceptions.EntityNotFoundException;
 import br.com.fintech.factory.ConnectionFactory;
 import br.com.fintech.model.Categoria;
 import br.com.fintech.model.Gasto;
+import org.springframework.stereotype.Repository;
 
 import java.io.Closeable;
 import java.math.BigDecimal;
@@ -11,6 +12,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
+@Repository
 public class GastoDAO implements CrudDAO<Gasto, Long>, AutoCloseable {
     private final Connection conexao;
 
@@ -18,7 +20,7 @@ public class GastoDAO implements CrudDAO<Gasto, Long>, AutoCloseable {
         conexao = ConnectionFactory.getConnection();
     }
 
-    public void insert(Gasto gasto) throws SQLException {
+    public Gasto insert(Gasto gasto) throws SQLException {
         String sql = "INSERT INTO T_SIF_GASTO (COD_GASTO,DES_GASTO,VAL_GASTO,DAT_GASTO,COD_USUARIO,COD_CATEGORIA_GASTO) " +
                 "VALUES (SEQ_SIF_GASTO.NEXTVAL, ?,?,?,?,?)";
 
@@ -35,8 +37,12 @@ public class GastoDAO implements CrudDAO<Gasto, Long>, AutoCloseable {
                 if (generatedKeys.next()) {
                     Long novoId = generatedKeys.getLong(1);
                     gasto.setId(novoId);
+                } else {
+                    throw new SQLException("Falha ao obter o ID gerado para o Gasto. Nenhuma chave retornada");
                 }
             }
+
+            return gasto;
         }
     }
 
@@ -53,17 +59,20 @@ public class GastoDAO implements CrudDAO<Gasto, Long>, AutoCloseable {
         return new Gasto(id, codUsuario, descricao, categoria, valor, data.toLocalDate());
     }
 
-    public List<Gasto> getAll() throws SQLException {
-        String sql = "SELECT * FROM T_SIF_GASTO";
+    public List<Gasto> getAllByUserId(Long userId) throws SQLException {
+        String sql = "SELECT * FROM T_SIF_GASTO WHERE COD_USUARIO = ?";
 
-        try(PreparedStatement stm = conexao.prepareStatement(sql); ResultSet result = stm.executeQuery()) {
+        try(PreparedStatement stm = conexao.prepareStatement(sql)) {
+            stm.setLong(1, userId);
+
             List<Gasto> gastos = new ArrayList<>();
 
-            while(result.next()) {
-                gastos.add(parseGasto(result));
+            try(ResultSet result = stm.executeQuery()) {
+                while (result.next()) {
+                    gastos.add(parseGasto(result));
+                }
+                return gastos;
             }
-
-            return gastos;
         }
     }
 
@@ -81,7 +90,7 @@ public class GastoDAO implements CrudDAO<Gasto, Long>, AutoCloseable {
         }
     }
 
-    public void update(Gasto gasto) throws SQLException, EntityNotFoundException {
+    public Gasto update(Long userId, Gasto gasto) throws SQLException, EntityNotFoundException {
         String sql = "UPDATE T_SIF_GASTO SET DES_GASTO = ?, VAL_GASTO = ?, DAT_GASTO = ?, COD_CATEGORIA_GASTO = ? WHERE COD_GASTO = ? AND COD_USUARIO = ?";
 
         try(PreparedStatement stm = conexao.prepareStatement(sql)) {
@@ -89,13 +98,15 @@ public class GastoDAO implements CrudDAO<Gasto, Long>, AutoCloseable {
             stm.setBigDecimal(2, gasto.getValor());
             stm.setDate(3, Date.valueOf(gasto.getDataGasto()));
             stm.setLong(4, gasto.getCategoriaId());
-            stm.setLong(4, gasto.getId());
-            stm.setLong(5, gasto.getUsuarioId());
+            stm.setLong(5, gasto.getId());
+            stm.setLong(6, userId);
 
             int linhasAfetadas = stm.executeUpdate();
             if(linhasAfetadas == 0) {
                 throw new EntityNotFoundException("Erro: Gasto com ID " + gasto.getId() + " não foi encontrado para atualização!");
             }
+
+            return gasto;
         }
     }
 

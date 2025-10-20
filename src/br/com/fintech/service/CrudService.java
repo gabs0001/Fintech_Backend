@@ -2,10 +2,12 @@ package br.com.fintech.service;
 
 import br.com.fintech.dao.CrudDAO;
 import br.com.fintech.exceptions.EntityNotFoundException;
+import org.springframework.stereotype.Service;
 
 import java.sql.SQLException;
 import java.util.List;
 
+@Service
 public abstract class CrudService<T, ID> {
     protected CrudDAO<T, ID> dao;
 
@@ -13,8 +15,8 @@ public abstract class CrudService<T, ID> {
         this.dao = dao;
     }
 
-    public List<T> getAll() throws SQLException {
-        return dao.getAll();
+    public List<T> getAllByUserId(Long userId) throws SQLException {
+        return dao.getAllByUserId(userId);
     }
 
     public T getById(ID idEntity, ID idUser) throws SQLException {
@@ -31,12 +33,12 @@ public abstract class CrudService<T, ID> {
         return entity;
     }
 
-    public void insert(T entity) throws SQLException {
-        dao.insert(entity);
+    public T insert(T entity) throws SQLException {
+        return dao.insert(entity);
     }
 
-    public void update(T entity) throws SQLException, EntityNotFoundException {
-        dao.update(entity);
+    public T update(ID userId, T entity) throws SQLException, EntityNotFoundException {
+        return dao.update(userId, entity);
     }
 
     public void remove(ID idEntity, ID idUser) throws SQLException, EntityNotFoundException {

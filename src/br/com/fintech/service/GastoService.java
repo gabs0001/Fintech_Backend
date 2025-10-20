@@ -3,10 +3,12 @@ package br.com.fintech.service;
 import br.com.fintech.dao.GastoDAO;
 import br.com.fintech.exceptions.EntityNotFoundException;
 import br.com.fintech.model.Gasto;
+import org.springframework.stereotype.Service;
 
 import java.sql.SQLException;
 import java.time.LocalDate;
 
+@Service
 public class GastoService extends CrudService<Gasto, Long> {
 
     public GastoService(GastoDAO gastoDAO) {
@@ -23,13 +25,13 @@ public class GastoService extends CrudService<Gasto, Long> {
         }
     }
 
-    public void insert(Gasto novoGasto) throws SQLException, IllegalArgumentException {
+    public Gasto insert(Gasto novoGasto) throws SQLException, IllegalArgumentException {
         validarGasto(novoGasto);
-        super.insert(novoGasto);
+        return super.insert(novoGasto);
     }
 
-    public void update(Gasto gastoParaAlterar) throws SQLException, EntityNotFoundException, IllegalArgumentException {
+    public Gasto update(Long userId, Gasto gastoParaAlterar) throws SQLException, EntityNotFoundException, IllegalArgumentException {
         validarGasto(gastoParaAlterar);
-        super.update(gastoParaAlterar);
+        return super.update(userId, gastoParaAlterar);
     }
 }

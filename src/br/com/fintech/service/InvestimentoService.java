@@ -5,10 +5,12 @@ import br.com.fintech.exceptions.EntityNotFoundException;
 import br.com.fintech.model.Categoria;
 import br.com.fintech.model.Instituicao;
 import br.com.fintech.model.Investimento;
+import org.springframework.stereotype.Service;
 
 import java.sql.SQLException;
 import java.time.LocalDate;
 
+@Service
 public class InvestimentoService extends CrudService<Investimento, Long> {
 
     public InvestimentoService(InvestimentoDAO investimentoDAO) { super(investimentoDAO); }
@@ -41,13 +43,13 @@ public class InvestimentoService extends CrudService<Investimento, Long> {
         }
     }
 
-    public void insert(Investimento novoInvestimento) throws SQLException, IllegalArgumentException {
+    public Investimento insert(Investimento novoInvestimento) throws SQLException, IllegalArgumentException {
         validarInvestimento(novoInvestimento);
-        super.insert(novoInvestimento);
+        return super.insert(novoInvestimento);
     }
 
-    public void update(Investimento investimentoParaAlterar) throws SQLException, EntityNotFoundException {
+    public Investimento update(Long userId, Investimento investimentoParaAlterar) throws SQLException, EntityNotFoundException {
         validarInvestimento(investimentoParaAlterar);
-        super.update(investimentoParaAlterar);
+        return super.update(userId, investimentoParaAlterar);
     }
 }

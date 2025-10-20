@@ -3,11 +3,13 @@ package br.com.fintech.service;
 import br.com.fintech.dao.ObjetivoFinanceiroDAO;
 import br.com.fintech.exceptions.EntityNotFoundException;
 import br.com.fintech.model.ObjetivoFinanceiro;
+import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.time.LocalDate;
 
+@Service
 public class ObjetivoFinanceiroService extends CrudService<ObjetivoFinanceiro, Long>{
 
     public ObjetivoFinanceiroService(ObjetivoFinanceiroDAO objetivoFinanceiroDAO) {
@@ -24,13 +26,13 @@ public class ObjetivoFinanceiroService extends CrudService<ObjetivoFinanceiro, L
         }
     }
 
-    public void insert(ObjetivoFinanceiro novoObjetivo) throws SQLException, IllegalArgumentException {
+    public ObjetivoFinanceiro insert(ObjetivoFinanceiro novoObjetivo) throws SQLException, IllegalArgumentException {
         validarObjetivo(novoObjetivo);
-        super.insert(novoObjetivo);
+        return super.insert(novoObjetivo);
     }
 
-    public void update(ObjetivoFinanceiro objetivoParaAlterar) throws SQLException, EntityNotFoundException, IllegalArgumentException {
+    public ObjetivoFinanceiro update(Long userId, ObjetivoFinanceiro objetivoParaAlterar) throws SQLException, EntityNotFoundException, IllegalArgumentException {
         validarObjetivo(objetivoParaAlterar);
-        super.update(objetivoParaAlterar);
+        return super.update(userId, objetivoParaAlterar);
     }
 }

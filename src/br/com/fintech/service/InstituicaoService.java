@@ -3,13 +3,17 @@ package br.com.fintech.service;
 import br.com.fintech.dao.InstituicaoDAO;
 import br.com.fintech.exceptions.EntityNotFoundException;
 import br.com.fintech.model.Instituicao;
+import org.springframework.stereotype.Service;
 
 import java.sql.SQLException;
+import java.util.List;
 
-public class InstituicaoService extends CrudService<Instituicao, Long> {
+@Service
+public class InstituicaoService {
+    private final InstituicaoDAO dao;
 
-    public InstituicaoService(InstituicaoDAO instituicaoDAO) {
-        super(instituicaoDAO);
+    public InstituicaoService(InstituicaoDAO dao) {
+        this.dao = dao;
     }
 
     private void validarInstituicao(Instituicao instituicao) throws IllegalArgumentException {
@@ -18,13 +22,25 @@ public class InstituicaoService extends CrudService<Instituicao, Long> {
         }
     }
 
-    public void insert(Instituicao novaInstituicao) throws SQLException, IllegalArgumentException {
-        validarInstituicao(novaInstituicao);
-        super.insert(novaInstituicao);
+    public List<Instituicao> getAll() throws SQLException {
+        return dao.getAll();
     }
 
-    public void update(Instituicao instituicaoParaAlterar) throws SQLException, EntityNotFoundException, IllegalArgumentException {
+    public Instituicao getById(Long idEntity) throws SQLException {
+        return dao.getById(idEntity);
+    }
+
+    public Instituicao insert(Instituicao novaInstituicao) throws SQLException {
+        validarInstituicao(novaInstituicao);
+        return dao.insert(novaInstituicao);
+    }
+
+    public Instituicao update(Long idEntity, Instituicao instituicaoParaAlterar) throws SQLException, EntityNotFoundException {
         validarInstituicao(instituicaoParaAlterar);
-        super.update(instituicaoParaAlterar);
+        return dao.update(idEntity, instituicaoParaAlterar);
+    }
+
+    public void remove(Long id) throws SQLException, EntityNotFoundException {
+        dao.remove(id);
     }
 }

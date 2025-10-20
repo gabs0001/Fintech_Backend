@@ -1,7 +1,10 @@
 package br.com.fintech.dao;
 
+import org.springframework.stereotype.Repository;
+
 import java.sql.SQLException;
 
+@Repository
 public class GastoCategoriaDAO extends CategoriaBaseDAO {
 
     public GastoCategoriaDAO() throws SQLException {
