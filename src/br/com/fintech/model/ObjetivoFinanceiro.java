@@ -1,14 +1,38 @@
 package br.com.fintech.model;
 
+import jakarta.persistence.*;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+@Entity
+@Table(name = "T_SIF_OBJETIVO_FINANCEIRO")
 public class ObjetivoFinanceiro {
+    @Id
+    @GeneratedValue(
+            strategy = GenerationType.SEQUENCE,
+            generator = "SEQ_SIF_OBJETIVO_FINANCEIRO"
+    )
+    @SequenceGenerator(
+            name = "SEQ_SIF_OBJETIVO_FINANCEIRO",
+            sequenceName = "SEQ_SIF_OBJETIVO_FINANCEIRO",
+            allocationSize = 1
+    )
     private Long id;
+
+    @Column(name = "COD_USUARIO", nullable = false)
     private Long usuarioId;
+
+    @Column(name = "NOM_OBJETIVO", length = 100, nullable = false)
     private String nome;
+
+    @Column(name = "DES_OBJETIVO", length = 100, nullable = false)
     private String descricao;
+
+    @Column(name = "VAL_OBJETIVO", nullable = false, precision = 10, scale = 2)
     private BigDecimal valor;
+
+    @Column(name = "DAT_CONCLUSAO_OBJETIVO", nullable = false)
     private LocalDate dataConclusao;
 
     public ObjetivoFinanceiro() { }
@@ -35,6 +59,8 @@ public class ObjetivoFinanceiro {
     public LocalDate getDataConclusao() { return this.dataConclusao; }
 
     public void setId(Long id) { this.id = id; }
+
+    public void setUsuarioId(Long usuarioId) { this.usuarioId = usuarioId; }
 
     public void setNome(String nome) { this.nome = nome; }
 

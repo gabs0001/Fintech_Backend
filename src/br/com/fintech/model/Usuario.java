@@ -1,13 +1,39 @@
 package br.com.fintech.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
+
 import java.time.LocalDate;
 
+@Entity
+@Table(name = "T_SIF_USUARIO")
 public class Usuario {
+    @Id
+    @GeneratedValue(
+            strategy = GenerationType.SEQUENCE,
+            generator = "SEQ_SIF_USUARIO"
+    )
+    @SequenceGenerator(
+            name = "SEQ_SIF_USUARIO",
+            sequenceName = "SEQ_SIF_USUARIO",
+            allocationSize = 1
+    )
     private Long id;
+
+    @Column(name = "NOM_USUARIO", length = 100, nullable = false)
     private String nome;
+
+    @Column(name = "DAT_NASCIMENTO")
     private LocalDate dataNascimento;
+
+    @Column(name = "DES_GENERO", length = 10)
     private String genero;
+
+    @Column(name = "TXT_EMAIL", nullable = false, unique = true, length = 150)
     private String email;
+
+    @JsonIgnore
+    @Column(name = "TXT_SENHA", nullable = false, length = 60)
     private String senha;
 
     public Usuario() {}
@@ -31,6 +57,7 @@ public class Usuario {
 
     public String getEmail() { return this.email; }
 
+    @JsonIgnore
     public String getSenha() { return this.senha; }
 
     public void setId(Long id) { this.id = id; }
@@ -53,7 +80,6 @@ public class Usuario {
                 ", dataNascimento=" + this.dataNascimento +
                 ", genero='" + this.genero + '\'' +
                 ", email='" + this.email + '\'' +
-                ", senha='" + this.senha + '\'' +
                 '}';
     }
 }

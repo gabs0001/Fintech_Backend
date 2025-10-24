@@ -2,7 +2,9 @@ package br.com.fintech.dao;
 
 import br.com.fintech.exceptions.EntityNotFoundException;
 import br.com.fintech.factory.ConnectionFactory;
-import br.com.fintech.model.Categoria;
+import br.com.fintech.model.CategoriaGasto;
+import br.com.fintech.model.TipoInvestimento;
+import br.com.fintech.model.TipoRecebimento;
 import org.springframework.stereotype.Repository;
 
 import java.sql.Connection;
@@ -14,11 +16,11 @@ import java.util.List;
 
 @Repository
 public abstract class CategoriaBaseDAO implements AutoCloseable {
-    protected final String nomeTabela;
-    protected final String nomePk;
-    protected final String nomeSequencia;
-    protected final String descricaoColuna;
-    protected final Connection conexao;
+    protected String nomeTabela;
+    protected String nomePk;
+    protected String nomeSequencia;
+    protected String descricaoColuna;
+    protected Connection conexao;
 
     public CategoriaBaseDAO(String nomeTabela, String nomePK, String nomeSequencia, String descricaoColuna) throws SQLException {
         this.nomeTabela = nomeTabela;
@@ -28,19 +30,45 @@ public abstract class CategoriaBaseDAO implements AutoCloseable {
         this.conexao = ConnectionFactory.getConnection();
     }
 
-    public Categoria insert(Categoria categoria) throws SQLException {
+    protected abstract <T> T parse(ResultSet result) throws SQLException;
+
+    public <T> T insert(T categoria) throws SQLException {
+        Long novoId;
+
         String sql = "INSERT INTO " + this.nomeTabela + "(" + this.nomePk + ", " + this.descricaoColuna
                 + ") VALUES (" + this.nomeSequencia + ".NEXTVAL, ?)";
 
         try(PreparedStatement stm = conexao.prepareStatement(sql, new String[]{ this.nomePk })) {
-            stm.setString(1, categoria.getDescricao());
+            String descricao = "";
+
+            if(categoria instanceof CategoriaGasto) {
+                descricao = ((CategoriaGasto) categoria).getDescricao();
+            }
+            else if(categoria instanceof TipoRecebimento) {
+                descricao = ((TipoRecebimento) categoria).getDescricao();
+            }
+            else if(categoria instanceof TipoInvestimento) {
+                descricao = ((TipoInvestimento) categoria).getDescricao();
+            }
+
+            stm.setString(1, descricao);
 
             stm.executeUpdate();
 
             try(ResultSet generatedKeys = stm.getGeneratedKeys()) {
                 if(generatedKeys.next()) {
-                    Long novoId = generatedKeys.getLong(1);
-                    categoria.setId(novoId);
+                    novoId = generatedKeys.getLong(1);
+                    if (categoria instanceof CategoriaGasto) {
+                        ((CategoriaGasto) categoria).setId(novoId);
+                    }
+                    else if (categoria instanceof TipoRecebimento) {
+                        ((TipoRecebimento) categoria).setId(novoId);
+                    }
+                    else if(categoria instanceof TipoInvestimento) {
+                        ((TipoInvestimento) categoria).setId(novoId);
+                    }
+                } else {
+                    throw new SQLException("Falha ao obter o ID gerado para a categoria. Nenhuma chave retornada.");
                 }
             }
 
@@ -48,30 +76,23 @@ public abstract class CategoriaBaseDAO implements AutoCloseable {
         }
     }
 
-    public Categoria parseCategoria(ResultSet result) throws SQLException {
-        Long id = result.getLong(this.nomePk);
-        String descricao = result.getString(this.descricaoColuna);
-
-        return new Categoria(id, descricao);
-    }
-
-    public List<Categoria> getAll() throws SQLException {
+    public List<?> getAll() throws SQLException {
         String sql = "SELECT * FROM " + this.nomeTabela;
 
         try(PreparedStatement stm = conexao.prepareStatement(sql)) {
 
-            List<Categoria> categorias = new ArrayList<>();
+            List<Object> categorias = new ArrayList<>();
 
             try(ResultSet result = stm.executeQuery()) {
                 while (result.next()) {
-                    categorias.add(parseCategoria(result));
+                    categorias.add(parse(result));
                 }
                 return categorias;
             }
         }
     }
 
-    public Categoria getById(Long entityId) throws SQLException {
+    public Object getById(Long entityId) throws SQLException {
         String sql = "SELECT * FROM " + this.nomeTabela + " WHERE " + this.nomePk + " = ?";
 
         try(PreparedStatement stm = conexao.prepareStatement(sql)) {
@@ -79,22 +100,46 @@ public abstract class CategoriaBaseDAO implements AutoCloseable {
 
             try(ResultSet result = stm.executeQuery()) {
                 if(!result.next()) return null;
-                return parseCategoria(result);
+                return parse(result);
             }
         }
     }
 
-    public Categoria update(Long idEntity, Categoria categoria) throws SQLException, EntityNotFoundException {
+    public <T> T update(Long idEntity, T categoria) throws SQLException, EntityNotFoundException {
+        String descricao = "";
+
+        if(categoria instanceof CategoriaGasto) {
+            descricao = ((CategoriaGasto) categoria).getDescricao();
+        }
+        else if (categoria instanceof TipoRecebimento) {
+            descricao = ((TipoRecebimento) categoria).getDescricao();
+        }
+        else if(categoria instanceof TipoInvestimento) {
+            descricao = ((TipoInvestimento) categoria).getDescricao();
+        }
+
         String sql = "UPDATE " + this.nomeTabela + " SET " + this.descricaoColuna + " = ? WHERE "
                 + this.nomePk + " = ?";
 
         try(PreparedStatement stm = conexao.prepareStatement(sql)) {
-            stm.setString(1, categoria.getDescricao());
+            stm.setString(1, descricao);
             stm.setLong(2, idEntity);
 
             int linhasAfetadas = stm.executeUpdate();
             if (linhasAfetadas == 0) {
-                throw new EntityNotFoundException("Erro: Categoria com ID " + categoria.getId()
+                Long id = null;
+
+                if(categoria instanceof CategoriaGasto) {
+                    id = ((CategoriaGasto) categoria).getId();
+                }
+                else if (categoria instanceof TipoRecebimento) {
+                    id = ((TipoRecebimento) categoria).getId();
+                }
+                else if(categoria instanceof TipoInvestimento) {
+                    id = ((TipoInvestimento) categoria).getId();
+                }
+
+                throw new EntityNotFoundException("Erro: Categoria com ID " + id
                         + " não foi encontrada para atualização!");
             }
 

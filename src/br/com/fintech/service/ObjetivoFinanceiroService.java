@@ -16,13 +16,17 @@ public class ObjetivoFinanceiroService extends CrudService<ObjetivoFinanceiro, L
         super(objetivoFinanceiroDAO);
     }
 
-    private void validarObjetivo(ObjetivoFinanceiro objetivo) throws IllegalArgumentException {
+    private void validarObjetivo(ObjetivoFinanceiro objetivo) throws EntityNotFoundException, IllegalArgumentException {
         if(objetivo.getValor().compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Erro: O valor do objetivo deve ser maior que zero!");
         }
 
-        if(objetivo.getDataConclusao().isBefore(LocalDate.now())) {
+        if(objetivo.getDataConclusao() == null || objetivo.getDataConclusao().isBefore(LocalDate.now())) {
             throw new IllegalArgumentException("Erro: A data de conclusão do objetivo deve ser uma data futura!");
+        }
+
+        if(objetivo.getDescricao() == null || objetivo.getDescricao().trim().isEmpty()) {
+            throw new IllegalArgumentException("Erro: A descrição do objetivo é obrigatória e não pode estar em branco!");
         }
     }
 
@@ -31,8 +35,13 @@ public class ObjetivoFinanceiroService extends CrudService<ObjetivoFinanceiro, L
         return super.insert(novoObjetivo);
     }
 
-    public ObjetivoFinanceiro update(Long userId, ObjetivoFinanceiro objetivoParaAlterar) throws SQLException, EntityNotFoundException, IllegalArgumentException {
+    public ObjetivoFinanceiro update(Long ownerId, ObjetivoFinanceiro objetivoParaAlterar) throws SQLException, EntityNotFoundException, IllegalArgumentException {
         validarObjetivo(objetivoParaAlterar);
-        return super.update(userId, objetivoParaAlterar);
+
+        if(objetivoParaAlterar.getId() == null) {
+            throw new IllegalArgumentException("Erro: ID do objetivo a ser atualizado é obrigatório.");
+        }
+
+        return super.update(ownerId, objetivoParaAlterar);
     }
 }

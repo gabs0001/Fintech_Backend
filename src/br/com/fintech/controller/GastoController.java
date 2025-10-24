@@ -19,85 +19,68 @@ public class GastoController {
         this.gastoService = gastoService;
     }
 
+    private Long getAuthenticatedUserId() {
+        return 1L;
+    }
+
     @GetMapping
-    public ResponseEntity<List<Gasto>> buscarTodos(@RequestParam("id") Long id) {
-        try {
-            List<Gasto> todosOsGastos = gastoService.getAllByUserId(id);
-            return ResponseEntity.ok(todosOsGastos);
-        }
-        catch(SQLException e) {
-            System.err.println("Erro ao tentar buscar todos os gastos do usuário: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    public ResponseEntity<List<Gasto>> buscarTodos() throws SQLException {
+        Long userId = getAuthenticatedUserId();
+
+        List<Gasto> todosOsGastos = gastoService.getAllByUserId(userId);
+
+        return ResponseEntity.ok(todosOsGastos);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Gasto> buscarPorId(
-            @PathVariable("id") Long id,
-            @RequestParam("userId") Long userId
-    ) {
-        try {
-            Gasto gastoPorId = gastoService.getById(id, userId);
+    public ResponseEntity<Gasto> buscarPorId(@PathVariable("id") Long id)
+            throws SQLException, EntityNotFoundException, IllegalArgumentException
+    {
+        Long userId = getAuthenticatedUserId();
 
-            if(gastoPorId == null) {
-                return ResponseEntity.noContent().build();
-            }
+        Gasto gastoPorId = gastoService.getById(id, userId);
 
-            return ResponseEntity.ok(gastoPorId);
+        if(gastoPorId == null) {
+            return ResponseEntity.notFound().build();
         }
-        catch(SQLException e) {
-            System.err.println("Erro ao tentar buscar os gastos no id especificado: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+
+        return ResponseEntity.ok(gastoPorId);
     }
 
     @PostMapping
-    public ResponseEntity<Gasto> salvar(@RequestBody Gasto gasto) {
-        try {
-            Gasto novoGasto = gastoService.insert(gasto);
-            return ResponseEntity.status(HttpStatus.CREATED).body(novoGasto);
-        }
-        catch(SQLException e) {
-            System.err.println("Erro ao tentar inserir novo gasto: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    public ResponseEntity<Gasto> salvar(@RequestBody Gasto gasto)
+            throws SQLException, IllegalArgumentException, EntityNotFoundException
+    {
+        Long userId = getAuthenticatedUserId();
+        gasto.setUsuarioId(userId);
+
+        Gasto novoGasto = gastoService.insert(gasto);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(novoGasto);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Gasto> atualizar(
-            @PathVariable("id") Long id,
-            @RequestParam("userId") Long userId,
-            @RequestBody Gasto gasto
-    ) throws EntityNotFoundException {
-        try {
-            gasto.setId(id);
+    public ResponseEntity<Gasto> atualizar(@PathVariable("id") Long id, @RequestBody Gasto gasto)
+            throws SQLException, EntityNotFoundException, IllegalArgumentException
+    {
+        Long userId = getAuthenticatedUserId();
 
-            Gasto gastoParaAtualizar = gastoService.update(gasto, userId);
+        gasto.setId(id);
+        gasto.setUsuarioId(userId);
 
-            return ResponseEntity.ok(gastoParaAtualizar);
-        }
-        catch(SQLException e) {
-            System.err.println("Erro ao tentar atualizar o gasto: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+        Gasto gastoAtualizado = gastoService.update(userId, gasto);
+
+        return ResponseEntity.ok(gastoAtualizado);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> remover(
-            @PathVariable("id") Long id,
-            @RequestParam("userId") Long userId
-    ) {
-        try {
-            gastoService.remove(id, userId);
-            return ResponseEntity.noContent().build();
-        }
-        catch(EntityNotFoundException e) {
-            System.err.println(e.getMessage());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
-        catch(SQLException e) {
-            System.err.println("Erro ao tentar remover o gasto: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    public ResponseEntity<Void> remover(@PathVariable("id") Long id)
+            throws SQLException, EntityNotFoundException, IllegalArgumentException
+    {
+        Long userId = getAuthenticatedUserId();
+
+        gastoService.remove(id, userId);
+
+        return ResponseEntity.noContent().build();
     }
 }

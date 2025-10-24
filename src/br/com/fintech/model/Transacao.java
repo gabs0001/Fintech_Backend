@@ -1,23 +1,31 @@
 package br.com.fintech.model;
 
+import jakarta.persistence.*;
+
 import java.math.BigDecimal;
 
+@MappedSuperclass
 public abstract class Transacao {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "COD_TRANSACAO")
     private Long id;
+
+    @Column(name = "COD_USUARIO", nullable = false)
     private Long usuarioId;
+
+    @Column(name = "DES_TRANSACAO", nullable = false)
     private String descricao;
-    private Categoria categoria;
+
+    @Column(name = "VAL_TRANSACAO", nullable = false, precision = 10, scale = 2)
     private BigDecimal valor;
 
     public Transacao() {}
 
-    public Transacao(Long id, Long usuarioId, String descricao, Categoria categoria, BigDecimal valor) {
+    public Transacao(Long id, Long usuarioId, String descricao, BigDecimal valor) {
         this.id = id;
         this.usuarioId = usuarioId;
         this.descricao = descricao;
-
-        this.categoria = categoria;
-
         this.valor = valor;
     }
 
@@ -27,12 +35,6 @@ public abstract class Transacao {
 
     public String getDescricao() { return this.descricao; }
 
-    public Categoria getCategoria() { return this.categoria; }
-
-    public Long getCategoriaId() {
-        return this.categoria != null ? this.categoria.getId() : null;
-    }
-
     public BigDecimal getValor() { return this.valor; }
 
     public void setId(Long id) { this.id = id; }
@@ -40,8 +42,6 @@ public abstract class Transacao {
     public void setUsuarioId(Long usuarioId) { this.usuarioId = usuarioId; }
 
     public void setDescricao(String descricao) { this.descricao = descricao; }
-
-    public void setCategoria(Categoria categoria) { this.categoria = categoria; }
 
     public void setValor(BigDecimal valor) { this.valor = valor; }
 
@@ -55,9 +55,8 @@ public abstract class Transacao {
     public String toString() {
         return "Transacao{" +
                 "id=" + id +
-                ", usuario=" + usuarioId +
+                ", usuarioId=" + usuarioId +
                 ", descricao='" + descricao + '\'' +
-                ", categoria='" + (categoria != null ? categoria.getDescricao() : "N/A") + '\'' +
                 ", valor=" + valor +
                 '}';
     }

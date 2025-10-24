@@ -19,85 +19,64 @@ public class InvestimentoController {
         this.investimentoService = investimentoService;
     }
 
+    private Long getAuthenticatedUserId() {
+        return 1L;
+    }
+
     @GetMapping
-    public ResponseEntity<List<Investimento>> buscarTodos(@RequestParam("userId") Long userId) {
-        try {
-            List<Investimento> todosOsInvestimentos = investimentoService.getAllByUserId(userId);
-            return ResponseEntity.ok(todosOsInvestimentos);
-        }
-        catch(SQLException e) {
-            System.err.println("Erro ao tentar buscar todos os investimentos: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    public ResponseEntity<List<Investimento>> buscarTodos() throws SQLException {
+        Long userId = getAuthenticatedUserId();
+
+        List<Investimento> todosOsInvestimentos = investimentoService.getAllByUserId(userId);
+
+        return ResponseEntity.ok(todosOsInvestimentos);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Investimento> buscarPorId(
-            @PathVariable("id") Long id,
-            @RequestParam("userId") Long userId
-    ) {
-        try {
-            Investimento investimentoPorId = investimentoService.getById(id, userId);
+    public ResponseEntity<Investimento> buscarPorId(@PathVariable("id") Long id)
+            throws SQLException, EntityNotFoundException, IllegalArgumentException
+    {
+        Long userId = getAuthenticatedUserId();
 
-            if(investimentoPorId == null) {
-                return ResponseEntity.noContent().build();
-            }
+        Investimento investimentoPorId = investimentoService.getById(id, userId);
 
-            return ResponseEntity.ok(investimentoPorId);
+        if(investimentoPorId == null) {
+            return ResponseEntity.notFound().build();
         }
-        catch(SQLException e) {
-            System.err.println("Erro ao tentar buscar os investimentos no id especificado: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+
+        return ResponseEntity.ok(investimentoPorId);
     }
 
     @PostMapping
-    public ResponseEntity<Investimento> salvar(@RequestBody Investimento investimento) {
-        try {
-            Investimento novoInvestimento = investimentoService.insert(investimento);
-            return ResponseEntity.status(HttpStatus.CREATED).body(novoInvestimento);
-        }
-        catch(SQLException e) {
-            System.err.println("Erro ao tentar inserir novo investimento: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    public ResponseEntity<Investimento> salvar(@RequestBody Investimento investimento)
+            throws SQLException, EntityNotFoundException, IllegalArgumentException
+    {
+        Long userId = getAuthenticatedUserId();
+        investimento.setUsuarioId(userId);
+
+        Investimento novoInvestimento = investimentoService.insert(investimento);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(novoInvestimento);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Investimento> atualizar(
-            @PathVariable("id") Long id,
-            @RequestParam("userId") Long userId,
-            @RequestBody Investimento investimento
-    ) {
-        try {
-            investimento.setId(id);
+    public ResponseEntity<Investimento> atualizar(@PathVariable("id") Long id, @RequestBody Investimento investimento) throws SQLException, EntityNotFoundException, IllegalArgumentException {
+        Long userId = getAuthenticatedUserId();
 
-            Investimento investimentoParaAtualizar = investimentoService.update(investimento, userId);
+        investimento.setId(id);
+        investimento.setUsuarioId(userId);
 
-            return ResponseEntity.ok(investimentoParaAtualizar);
-        }
-        catch(SQLException e) {
-            System.err.println("Erro ao tentar atualizar o investimento: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+        Investimento investimentoParaAtualizar = investimentoService.update(userId, investimento);
+
+        return ResponseEntity.ok(investimentoParaAtualizar);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> remover(
-            @PathVariable("id") Long id,
-            @RequestParam("userId") Long userId
-    ) {
-        try {
-            investimentoService.remove(id, userId);
-            return ResponseEntity.noContent().build();
-        }
-        catch(EntityNotFoundException e) {
-            System.err.println(e.getMessage());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
-        catch(SQLException e) {
-            System.err.println("Erro ao tentar excluir o investimento: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    public ResponseEntity<Void> remover(@PathVariable("id") Long id) throws SQLException, EntityNotFoundException, IllegalArgumentException {
+        Long userId = getAuthenticatedUserId();
+
+        investimentoService.remove(id, userId);
+
+        return ResponseEntity.noContent().build();
     }
 }

@@ -6,6 +6,7 @@ import br.com.fintech.dto.UsuarioResponse;
 import br.com.fintech.exceptions.EntityNotFoundException;
 import br.com.fintech.model.Usuario;
 import br.com.fintech.service.UsuarioService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -34,7 +35,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request) throws SQLException, IllegalArgumentException {
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) throws SQLException, IllegalArgumentException {
         String jwtToken = usuarioService.login(request.getEmail(), request.getSenha());
 
         AuthResponse response = new AuthResponse();

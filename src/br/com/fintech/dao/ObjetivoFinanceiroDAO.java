@@ -36,6 +36,8 @@ public class ObjetivoFinanceiroDAO implements CrudDAO<ObjetivoFinanceiro, Long>,
                 if (generatedKeys.next()) {
                     Long novoId = generatedKeys.getLong(1);
                     objetivoFinanceiro.setId(novoId);
+                } else {
+                    throw new SQLException("Falha ao obter o ID gerado para o Objetivo. Nenhuma chave retornada");
                 }
             }
 
@@ -56,11 +58,11 @@ public class ObjetivoFinanceiroDAO implements CrudDAO<ObjetivoFinanceiro, Long>,
         return new ObjetivoFinanceiro(id, idUsuario, nome, descricao, valor, novaDataConclusao);
     }
 
-    public List<ObjetivoFinanceiro> getAllByUserId(Long userId) throws SQLException {
+    public List<ObjetivoFinanceiro> getAllByUserId(Long ownerId) throws SQLException {
         String sql = "SELECT * FROM T_SIF_OBJETIVO_FINANCEIRO WHERE COD_USUARIO = ?";
 
         try(PreparedStatement stm = conexao.prepareStatement(sql)) {
-            stm.setLong(1, userId);
+            stm.setLong(1, ownerId);
 
             List<ObjetivoFinanceiro> objetivosFinanceiros = new ArrayList<>();
 
@@ -75,12 +77,12 @@ public class ObjetivoFinanceiroDAO implements CrudDAO<ObjetivoFinanceiro, Long>,
         }
     }
 
-    public ObjetivoFinanceiro getById(Long idEntity, Long idUser) throws SQLException {
+    public ObjetivoFinanceiro getById(Long idEntity, Long ownerId) throws SQLException {
         String sql = "SELECT * FROM T_SIF_OBJETIVO_FINANCEIRO WHERE COD_OBJETIVO = ? AND COD_USUARIO = ?";
 
         try(PreparedStatement stm = conexao.prepareStatement(sql)) {
             stm.setLong(1, idEntity);
-            stm.setLong(1, idUser);
+            stm.setLong(2, ownerId);
 
             try(ResultSet result = stm.executeQuery()) {
                 if(!result.next()) return null;
@@ -89,8 +91,8 @@ public class ObjetivoFinanceiroDAO implements CrudDAO<ObjetivoFinanceiro, Long>,
         }
     }
 
-    public ObjetivoFinanceiro update(Long userId, ObjetivoFinanceiro objetivoFinanceiro) throws SQLException, EntityNotFoundException {
-        String sql = "UPDATE T_SIF_OBJETIVO_FINANCEIRO SET NOM_OBJETIVO = ?, DES_OBJETIVO = ?, VAL_OBJETIVO = ?, DAT_CONCLUSAO = ? " +
+    public ObjetivoFinanceiro update(Long ownerId, ObjetivoFinanceiro objetivoFinanceiro) throws SQLException, EntityNotFoundException {
+        String sql = "UPDATE T_SIF_OBJETIVO_FINANCEIRO SET NOM_OBJETIVO = ?, DES_OBJETIVO = ?, VAL_OBJETIVO = ?, DAT_CONCLUSAO_OBJETIVO = ? " +
                 "WHERE COD_OBJETIVO = ? AND COD_USUARIO = ?";
 
         try(PreparedStatement stm = conexao.prepareStatement(sql)) {
@@ -99,7 +101,7 @@ public class ObjetivoFinanceiroDAO implements CrudDAO<ObjetivoFinanceiro, Long>,
             stm.setBigDecimal(3, objetivoFinanceiro.getValor());
             stm.setDate(4, Date.valueOf(objetivoFinanceiro.getDataConclusao()));
             stm.setLong(5, objetivoFinanceiro.getId());
-            stm.setLong(6, userId);
+            stm.setLong(6, ownerId);
 
             int linhasAfetadas = stm.executeUpdate();
             if(linhasAfetadas == 0) {
@@ -111,11 +113,12 @@ public class ObjetivoFinanceiroDAO implements CrudDAO<ObjetivoFinanceiro, Long>,
         }
     }
 
-    public void remove(Long id) throws SQLException, EntityNotFoundException {
-        String sql = "DELETE FROM T_SIF_OBJETIVO_FINANCEIRO WHERE COD_OBJETIVO = ?";
+    public void remove(Long idEntity, Long ownerId) throws SQLException, EntityNotFoundException {
+        String sql = "DELETE FROM T_SIF_OBJETIVO_FINANCEIRO WHERE COD_OBJETIVO = ? AND COD_USUARIO = ?";
 
         try(PreparedStatement stm = conexao.prepareStatement(sql)) {
-            stm.setLong(1, id);
+            stm.setLong(1, idEntity);
+            stm.setLong(2, ownerId);
 
             int linha = stm.executeUpdate();
             if (linha == 0) throw new EntityNotFoundException("Objetivo Financeiro não encontrado!");

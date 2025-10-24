@@ -4,7 +4,6 @@ import br.com.fintech.dto.DashboardDTO;
 import br.com.fintech.model.Gasto;
 import br.com.fintech.model.Recebimento;
 import br.com.fintech.service.RelatorioService;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,90 +20,76 @@ public class DashboardController {
         this.relatorioService = relatorioService;
     }
 
+    private Long getAuthenticatedUserId() { return 1L; }
+
     @GetMapping
     public ResponseEntity<DashboardDTO> buscarTodos(
-            @RequestParam("userId") Long userId,
             @RequestParam(value = "limite", defaultValue = "5") int limite,
             @RequestParam("inicio") LocalDate inicio,
             @RequestParam("fim") LocalDate fim
-    ) {
-        try {
-            DashboardDTO dashboardDTO =  relatorioService.getDashboard(userId, limite, inicio, fim);
-            return ResponseEntity.ok(dashboardDTO);
-        }
-        catch(SQLException e) {
-            System.err.println("Erro no banco de dados durante a consulta do Dashboard: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    ) throws SQLException
+    {
+        Long userId = getAuthenticatedUserId();
+
+        DashboardDTO dashboardDTO =  relatorioService.getDashboard(userId, limite, inicio, fim);
+
+        return ResponseEntity.ok(dashboardDTO);
     }
 
-    @GetMapping("/saldo-geral/{id}")
-    public ResponseEntity<BigDecimal> getSaldoGeral(@PathVariable Long id) {
-        try {
-           BigDecimal saldoGeral =  relatorioService.calcularSaldoGeral(id);
-           return ResponseEntity.ok(saldoGeral);
-        }
-        catch (SQLException e) {
-            System.err.println("Erro ao tentar buscar o saldo geral: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    @GetMapping("/saldo-geral")
+    public ResponseEntity<BigDecimal> getSaldoGeral() throws SQLException {
+        Long userId = getAuthenticatedUserId();
+
+        BigDecimal saldoGeral =  relatorioService.calcularSaldoGeral(userId);
+
+        return ResponseEntity.ok(saldoGeral);
     }
 
-    @GetMapping("/total-investido/{id}")
-    public ResponseEntity<BigDecimal> getTotalInvestido(@PathVariable Long id) {
-        try {
-            BigDecimal totalInvestido =  relatorioService.calcularTotalInvestido(id);
-            return ResponseEntity.ok(totalInvestido);
-        }
-        catch(SQLException e) {
-            System.err.println("Erro ao tentar buscar o total investido: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    @GetMapping("/total-investido")
+    public ResponseEntity<BigDecimal> getTotalInvestido() throws SQLException {
+        Long userId = getAuthenticatedUserId();
+
+        BigDecimal totalInvestido =  relatorioService.calcularTotalInvestido(userId);
+
+        return ResponseEntity.ok(totalInvestido);
     }
 
-    @GetMapping("/ultimo-gasto/{id}")
-    public ResponseEntity<Gasto> getUltimoGasto(@PathVariable Long id) {
-        try {
-            Gasto gasto = relatorioService.getUltimoGasto(id);
+    @GetMapping("/ultimo-gasto")
+    public ResponseEntity<Gasto> getUltimoGasto() throws SQLException {
+        Long userId = getAuthenticatedUserId();
 
-            if(gasto == null) {
-                return ResponseEntity.noContent().build();
-            }
+        Gasto gasto = relatorioService.getUltimoGasto(userId);
 
-            return ResponseEntity.ok(gasto);
+        if(gasto == null) {
+            return ResponseEntity.notFound().build();
         }
-        catch(SQLException e) {
-            System.err.println("Erro ao tentar buscar o último gasto: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+
+        return ResponseEntity.ok(gasto);
     }
 
-    @GetMapping("/ultimo-recebimento/{id}")
-    public ResponseEntity<Recebimento> getUltimoRecebimento(@PathVariable Long id) {
-        try {
-            Recebimento recebimento = relatorioService.getUltimoRecebimento(id);
+    @GetMapping("/ultimo-recebimento")
+    public ResponseEntity<Recebimento> getUltimoRecebimento() throws SQLException {
+        Long userId = getAuthenticatedUserId();
 
-            if(recebimento == null) {
-                return ResponseEntity.noContent().build();
-            }
+        Recebimento recebimento = relatorioService.getUltimoRecebimento(userId);
 
-            return ResponseEntity.ok(recebimento);
+        if(recebimento == null) {
+            return ResponseEntity.notFound().build();
         }
-        catch(SQLException e) {
-            System.err.println("Erro ao tentar buscar o último recebimento: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+
+        return ResponseEntity.ok(recebimento);
     }
 
     @GetMapping("/saldo-por-periodo")
-    public ResponseEntity<BigDecimal> getSaldoPorPeriodo(@RequestParam Long id, @RequestParam LocalDate inicio, @RequestParam LocalDate fim) {
-        try {
-            BigDecimal saldoPeriodo = relatorioService.calcularSaldoPeriodo(id, inicio, fim);
-            return ResponseEntity.ok(saldoPeriodo);
-        }
-        catch(SQLException e) {
-            System.err.println("Erro ao tentar buscar o saldo no período definido: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    public ResponseEntity<BigDecimal> getSaldoPorPeriodo(
+            @RequestParam LocalDate inicio,
+            @RequestParam LocalDate fim
+    ) throws SQLException
+    {
+        Long userId = getAuthenticatedUserId();
+
+        BigDecimal saldoPeriodo = relatorioService.calcularSaldoPeriodo(userId, inicio, fim);
+
+        return ResponseEntity.ok(saldoPeriodo);
     }
 }

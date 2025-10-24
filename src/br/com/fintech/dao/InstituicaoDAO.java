@@ -33,6 +33,8 @@ public class InstituicaoDAO implements AutoCloseable {
                 if (generatedKeys.next()) {
                     Long novoId = generatedKeys.getLong(1);
                     instituicao.setId(novoId);
+                } else {
+                    throw new SQLException("Falha ao obter o ID gerado para a Instituição. Nenhuma chave retornada");
                 }
             }
 

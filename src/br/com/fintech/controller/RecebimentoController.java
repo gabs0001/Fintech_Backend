@@ -19,85 +19,68 @@ public class RecebimentoController {
         this.recebimentoService = recebimentoService;
     }
 
+    private Long getAuthenticatedUserId() {
+        return 1L;
+    }
+
     @GetMapping
-    public ResponseEntity<List<Recebimento>> buscarTodos(@RequestParam("userId") Long userId) {
-        try {
-            List<Recebimento> todosOsRecebimentos = recebimentoService.getAllByUserId(userId);
-            return ResponseEntity.ok(todosOsRecebimentos);
-        }
-        catch(SQLException e) {
-            System.err.println("Erro ao tentar buscar todos os recebimentos: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    public ResponseEntity<List<Recebimento>> buscarTodos() throws SQLException {
+        Long userId = getAuthenticatedUserId();
+
+        List<Recebimento> todosOsRecebimentos = recebimentoService.getAllByUserId(userId);
+
+        return ResponseEntity.ok(todosOsRecebimentos);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Recebimento> buscarPorId(
-            @PathVariable("id") Long id,
-            @RequestParam("userId") Long userId
-    ) {
-        try {
-            Recebimento recebimentoPorId = recebimentoService.getById(id, userId);
+    public ResponseEntity<Recebimento> buscarPorId(@PathVariable("id") Long id)
+            throws SQLException, EntityNotFoundException, IllegalArgumentException
+    {
+        Long userId = getAuthenticatedUserId();
 
-            if(recebimentoPorId == null) {
-                return ResponseEntity.noContent().build();
-            }
+        Recebimento recebimentoPorId = recebimentoService.getById(id, userId);
 
-            return ResponseEntity.ok(recebimentoPorId);
+        if(recebimentoPorId == null) {
+            return ResponseEntity.notFound().build();
         }
-        catch(SQLException e) {
-            System.err.println("Erro ao tentar buscar os recebimentos no id especificado: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+
+        return ResponseEntity.ok(recebimentoPorId);
     }
 
     @PostMapping
-    public ResponseEntity<Recebimento> salvar(@RequestBody Recebimento recebimento) {
-        try {
-            Recebimento novoRecebimento = recebimentoService.insert(recebimento);
-            return ResponseEntity.status(HttpStatus.CREATED).body(novoRecebimento);
-        }
-        catch(SQLException e) {
-            System.err.println("Erro ao tentar inserir novo recebimento: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    public ResponseEntity<Recebimento> salvar(@RequestBody Recebimento recebimento)
+            throws SQLException, IllegalArgumentException, EntityNotFoundException
+    {
+        Long userId = getAuthenticatedUserId();
+        recebimento.setUsuarioId(userId);
+
+        Recebimento novoRecebimento = recebimentoService.insert(recebimento);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(novoRecebimento);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Recebimento> atualizar(
-            @PathVariable("id") Long id,
-            @RequestParam("userId") Long userId,
-            @RequestBody Recebimento recebimento
-    ) {
-        try {
-            recebimento.setId(id);
+    public ResponseEntity<Recebimento> atualizar(@PathVariable("id") Long id, @RequestBody Recebimento recebimento)
+            throws SQLException, EntityNotFoundException, IllegalArgumentException
+    {
+        Long userId = getAuthenticatedUserId();
 
-            Recebimento recebimentoParaAtualizar = recebimentoService.update(recebimento, userId);
+        recebimento.setId(id);
+        recebimento.setUsuarioId(userId);
 
-            return ResponseEntity.ok(recebimentoParaAtualizar);
-        }
-        catch(SQLException e) {
-            System.err.println("Erro ao tentar atualizar o recebimento: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+        Recebimento recebimentoParaAtualizar = recebimentoService.update(userId, recebimento);
+
+        return ResponseEntity.ok(recebimentoParaAtualizar);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> remover(
-            @PathVariable("id") Long id,
-            @RequestParam("userId") Long userId
-    ) {
-        try {
-            recebimentoService.remove(id, userId);
-            return ResponseEntity.noContent().build();
-        }
-        catch(EntityNotFoundException e) {
-            System.err.println(e.getMessage());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
-        catch(SQLException e) {
-            System.err.println("Erro ao tentar excluir o recebimento: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    public ResponseEntity<Void> remover(@PathVariable("id") Long id)
+            throws SQLException, EntityNotFoundException, IllegalArgumentException
+    {
+        Long userId = getAuthenticatedUserId();
+
+        recebimentoService.remove(id, userId);
+
+        return ResponseEntity.noContent().build();
     }
 }

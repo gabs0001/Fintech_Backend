@@ -2,7 +2,7 @@ package br.com.fintech.controller;
 
 import br.com.fintech.exceptions.EntityNotFoundException;
 import br.com.fintech.model.Categoria;
-import br.com.fintech.service.CategoriaService;
+import br.com.fintech.service.CategoriaBaseService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,9 +13,9 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/categorias")
 public class CategoriaController {
-    private final CategoriaService categoriaService;
+    private final CategoriaBaseService categoriaService;
 
-    public CategoriaController(CategoriaService categoriaService) {
+    public CategoriaController(CategoriaBaseService categoriaService) {
         this.categoriaService = categoriaService;
     }
 

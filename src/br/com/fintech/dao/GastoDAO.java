@@ -2,13 +2,14 @@ package br.com.fintech.dao;
 
 import br.com.fintech.exceptions.EntityNotFoundException;
 import br.com.fintech.factory.ConnectionFactory;
-import br.com.fintech.model.Categoria;
+import br.com.fintech.model.CategoriaGasto;
 import br.com.fintech.model.Gasto;
+import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Repository;
 
-import java.io.Closeable;
 import java.math.BigDecimal;
 import java.sql.*;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,6 +21,74 @@ public class GastoDAO implements CrudDAO<Gasto, Long>, AutoCloseable {
         conexao = ConnectionFactory.getConnection();
     }
 
+    public BigDecimal calcularTotal(Long userId) throws SQLException {
+        String sql = "SELECT SUM(VAL_GASTO) AS TOTAL FROM T_SIF_GASTO WHERE COD_USUARIO = ?";
+
+        try(PreparedStatement stm = conexao.prepareStatement(sql)) {
+            stm.setLong(1, userId);
+
+            try(ResultSet result = stm.executeQuery()) {
+                if (result.next()) {
+                    return result.getBigDecimal("TOTAL") != null ? result.getBigDecimal("TOTAL") : BigDecimal.ZERO;
+                }
+                return BigDecimal.ZERO;
+            }
+        }
+    }
+
+    public BigDecimal calcularTotalPeriodo(Long userId, LocalDate inicio, LocalDate fim) throws SQLException {
+        String sql = "SELECT SUM(VAL_GASTO) AS TOTAL FROM T_SIF_GASTO WHERE COD_USUARIO = ? AND DAT_GASTO BETWEEN ? AND ?";
+
+        try(PreparedStatement stm = conexao.prepareStatement(sql)) {
+            stm.setLong(1, userId);
+            stm.setDate(2, Date.valueOf(inicio));
+            stm.setDate(3, Date.valueOf(fim));
+
+            try(ResultSet result = stm.executeQuery()) {
+                if (result.next()) {
+                    return result.getBigDecimal("TOTAL") != null ? result.getBigDecimal("TOTAL") : BigDecimal.ZERO;
+                }
+                return BigDecimal.ZERO;
+            }
+        }
+    }
+
+    public Gasto getUltimo(Long userId) throws SQLException {
+        String sql = "SELECT G.*, C.DES_CATEGORIA_GASTO FROM T_SIF_GASTO G " +
+                "JOIN T_SIF_CATEGORIA_GASTO C ON G.COD_CATEGORIA_GASTO = C.COD_CATEGORIA_GASTO " +
+                "WHERE G.COD_USUARIO = ? ORDER BY G.DAT_GASTO DESC FETCH FIRST 1 ROW ONLY";
+
+        try(PreparedStatement stm = conexao.prepareStatement(sql)) {
+            stm.setLong(1, userId);
+
+            try(ResultSet result = stm.executeQuery()) {
+                if (!result.next()) return null;
+                return parseGasto(result);
+            }
+        }
+    }
+
+    public List<Gasto> getUltimos(Long userId, int limite) throws SQLException {
+        String sql = "SELECT G.*, C.DES_CATEGORIA_GASTO FROM T_SIF_GASTO G " +
+                "JOIN T_SIF_CATEGORIA_GASTO C ON G.COD_CATEGORIA_GASTO = C.COD_CATEGORIA_GASTO " +
+                "WHERE G.COD_USUARIO = ? ORDER BY G.DAT_GASTO DESC FETCH NEXT ? ROWS ONLY";
+
+        try(PreparedStatement stm = conexao.prepareStatement(sql)) {
+            stm.setLong(1, userId);
+            stm.setInt(2, limite);
+
+            List<Gasto> gastos = new ArrayList<>();
+
+            try(ResultSet result = stm.executeQuery()) {
+                while (result.next()) {
+                    gastos.add(parseGasto(result));
+                }
+
+                return gastos;
+            }
+        }
+    }
+
     public Gasto insert(Gasto gasto) throws SQLException {
         String sql = "INSERT INTO T_SIF_GASTO (COD_GASTO,DES_GASTO,VAL_GASTO,DAT_GASTO,COD_USUARIO,COD_CATEGORIA_GASTO) " +
                 "VALUES (SEQ_SIF_GASTO.NEXTVAL, ?,?,?,?,?)";
@@ -29,7 +98,7 @@ public class GastoDAO implements CrudDAO<Gasto, Long>, AutoCloseable {
             stm.setBigDecimal(2, gasto.getValor());
             stm.setDate(3, Date.valueOf(gasto.getDataGasto()));
             stm.setLong(4, gasto.getUsuarioId());
-            stm.setLong(5, gasto.getCategoriaId());
+            stm.setLong(5, gasto.getCategoriaGastoId());
 
             stm.executeUpdate();
 
@@ -51,19 +120,21 @@ public class GastoDAO implements CrudDAO<Gasto, Long>, AutoCloseable {
         String descricao = result.getString("DES_GASTO");
         BigDecimal valor = result.getBigDecimal("VAL_GASTO");
         Date data = result.getDate("DAT_GASTO");
-        Long codUsuario = result.getLong("COD_USUARIO");
+        Long idUsuario = result.getLong("COD_USUARIO");
         Long codCategoria = result.getLong("COD_CATEGORIA_GASTO");
 
-        Categoria categoria = new Categoria(codCategoria, null);
+        CategoriaGasto categoriaGasto = new CategoriaGasto(codCategoria, null);
 
-        return new Gasto(id, codUsuario, descricao, categoria, valor, data.toLocalDate());
+        return new Gasto(id, idUsuario, descricao, categoriaGasto, valor, data.toLocalDate());
     }
 
-    public List<Gasto> getAllByUserId(Long userId) throws SQLException {
-        String sql = "SELECT * FROM T_SIF_GASTO WHERE COD_USUARIO = ?";
+    public List<Gasto> getAllByUserId(Long ownerId) throws SQLException {
+        String sql = "SELECT G.*, C.DES_CATEGORIA_GASTO FROM T_SIF_GASTO G " +
+                "JOIN T_SIF_CATEGORIA_GASTO C ON G.COD_CATEGORIA_GASTO = C.COD_CATEGORIA_GASTO " +
+                "WHERE G.COD_USUARIO = ?";
 
         try(PreparedStatement stm = conexao.prepareStatement(sql)) {
-            stm.setLong(1, userId);
+            stm.setLong(1, ownerId);
 
             List<Gasto> gastos = new ArrayList<>();
 
@@ -71,17 +142,20 @@ public class GastoDAO implements CrudDAO<Gasto, Long>, AutoCloseable {
                 while (result.next()) {
                     gastos.add(parseGasto(result));
                 }
+
                 return gastos;
             }
         }
     }
 
-    public Gasto getById(Long gastoId, Long userId) throws SQLException {
-        String sql = "SELECT * FROM T_SIF_GASTO WHERE COD_GASTO = ? AND COD_USUARIO = ?";
+    public Gasto getById(Long idEntity, Long ownerId) throws SQLException {
+        String sql = "SELECT G.*, C.DES_CATEGORIA_GASTO FROM T_SIF_GASTO G " +
+                "JOIN T_SIF_CATEGORIA_GASTO C ON G.COD_CATEGORIA_GASTO = C.COD_CATEGORIA_GASTO " +
+                "WHERE G.COD_GASTO = ? AND G.COD_USUARIO = ?";
 
         try(PreparedStatement stm = conexao.prepareStatement(sql)) {
-            stm.setLong(1, gastoId);
-            stm.setLong(2, userId);
+            stm.setLong(1, idEntity);
+            stm.setLong(2, ownerId);
 
             try(ResultSet result = stm.executeQuery()) {
                 if(!result.next()) return null;
@@ -90,16 +164,16 @@ public class GastoDAO implements CrudDAO<Gasto, Long>, AutoCloseable {
         }
     }
 
-    public Gasto update(Long userId, Gasto gasto) throws SQLException, EntityNotFoundException {
+    public Gasto update(Long ownerId, Gasto gasto) throws SQLException, EntityNotFoundException {
         String sql = "UPDATE T_SIF_GASTO SET DES_GASTO = ?, VAL_GASTO = ?, DAT_GASTO = ?, COD_CATEGORIA_GASTO = ? WHERE COD_GASTO = ? AND COD_USUARIO = ?";
 
         try(PreparedStatement stm = conexao.prepareStatement(sql)) {
             stm.setString(1, gasto.getDescricao());
             stm.setBigDecimal(2, gasto.getValor());
             stm.setDate(3, Date.valueOf(gasto.getDataGasto()));
-            stm.setLong(4, gasto.getCategoriaId());
+            stm.setLong(4, gasto.getCategoriaGastoId());
             stm.setLong(5, gasto.getId());
-            stm.setLong(6, userId);
+            stm.setLong(6, ownerId);
 
             int linhasAfetadas = stm.executeUpdate();
             if(linhasAfetadas == 0) {
@@ -110,11 +184,12 @@ public class GastoDAO implements CrudDAO<Gasto, Long>, AutoCloseable {
         }
     }
 
-    public void remove(Long id) throws SQLException, EntityNotFoundException {
-        String sql = "DELETE FROM T_SIF_GASTO WHERE COD_GASTO = ?";
+    public void remove(Long idEntity, Long ownerId) throws SQLException, EntityNotFoundException {
+        String sql = "DELETE FROM T_SIF_GASTO WHERE COD_GASTO = ? AND COD_USUARIO = ?";
 
         try(PreparedStatement stm = conexao.prepareStatement(sql)) {
-            stm.setLong(1, id);
+            stm.setLong(1, idEntity);
+            stm.setLong(2, ownerId);
 
             int linha = stm.executeUpdate();
             if (linha == 0) throw new EntityNotFoundException("Gasto não encontrado!");

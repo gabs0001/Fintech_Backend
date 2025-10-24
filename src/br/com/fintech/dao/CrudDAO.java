@@ -9,8 +9,8 @@ import java.util.List;
 @Repository
 public interface CrudDAO<T, ID> {
     T insert(T entity) throws SQLException;
-    List<T> getAllByUserId(Long userId) throws SQLException;
-    T getById(ID entityId, ID userId) throws SQLException;
-    T update(ID userId, T entity) throws SQLException, EntityNotFoundException;
-    void remove(ID id) throws SQLException, EntityNotFoundException;
+    List<T> getAllByUserId(Long ownerId) throws SQLException;
+    T getById(ID entityId, Long ownerId) throws SQLException;
+    T update(Long ownerId, T entity) throws SQLException, EntityNotFoundException;
+    void remove(ID idEntity, Long ownerId) throws SQLException, EntityNotFoundException;
 }

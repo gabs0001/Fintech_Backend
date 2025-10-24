@@ -22,6 +22,17 @@ public class InstituicaoService {
         }
     }
 
+    public Instituicao fetchOrThrowException(Long instituicaoId) throws SQLException, EntityNotFoundException {
+
+        Instituicao instituicao = dao.getById(instituicaoId);
+
+        if(instituicao == null) {
+            throw new EntityNotFoundException("Instituição com ID: " + instituicaoId + " não encontrada!");
+        }
+
+        return instituicao;
+    }
+
     public List<Instituicao> getAll() throws SQLException {
         return dao.getAll();
     }
@@ -37,6 +48,11 @@ public class InstituicaoService {
 
     public Instituicao update(Long idEntity, Instituicao instituicaoParaAlterar) throws SQLException, EntityNotFoundException {
         validarInstituicao(instituicaoParaAlterar);
+
+        if(instituicaoParaAlterar.getId() == null) {
+            throw new IllegalArgumentException("Erro: ID da instituicao a ser atualizado é obrigatório.");
+        }
+
         return dao.update(idEntity, instituicaoParaAlterar);
     }
 

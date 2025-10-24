@@ -19,85 +19,60 @@ public class ObjetivoFinanceiroController {
         this.objetivoFinanceiroService = objetivoFinanceiroService;
     }
 
+    private Long getAuthenticatedUserId() {
+        return 1L;
+    }
+
     @GetMapping
-    public ResponseEntity<List<ObjetivoFinanceiro>> buscarTodos(@RequestParam("userId") Long userId) {
-        try {
-            List<ObjetivoFinanceiro> todosOsObjetivosFinanceiros = objetivoFinanceiroService.getAllByUserId(userId);
-            return ResponseEntity.ok(todosOsObjetivosFinanceiros);
-        }
-        catch(SQLException e) {
-            System.err.println("Erro ao tentar buscar todos os objetivos: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    public ResponseEntity<List<ObjetivoFinanceiro>> buscarTodos() throws SQLException {
+        Long userId = getAuthenticatedUserId();
+
+        List<ObjetivoFinanceiro> todosOsObjetivosFinanceiros = objetivoFinanceiroService.getAllByUserId(userId);
+
+        return ResponseEntity.ok(todosOsObjetivosFinanceiros);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ObjetivoFinanceiro> buscarPorId(
-            @PathVariable("id") Long id,
-            @RequestParam("userId") Long userId
-    ) {
-        try {
-            ObjetivoFinanceiro objetivoPorId = objetivoFinanceiroService.getById(id, userId);
+    public ResponseEntity<ObjetivoFinanceiro> buscarPorId(@PathVariable("id") Long id) throws SQLException, IllegalArgumentException, EntityNotFoundException {
+        Long userId = getAuthenticatedUserId();
 
-            if(objetivoPorId == null) {
-                return ResponseEntity.noContent().build();
-            }
+        ObjetivoFinanceiro objetivoPorId = objetivoFinanceiroService.getById(id, userId);
 
-            return ResponseEntity.ok(objetivoPorId);
+        if(objetivoPorId == null) {
+            return ResponseEntity.notFound().build();
         }
-        catch(SQLException e) {
-            System.err.println("Erro ao tentar buscar os objetivos no id especificado: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+
+        return ResponseEntity.ok(objetivoPorId);
     }
 
     @PostMapping
-    public ResponseEntity<ObjetivoFinanceiro> salvar(@RequestBody ObjetivoFinanceiro objetivoFinanceiro) {
-        try {
-            ObjetivoFinanceiro novoObjetivoFinanceiro = objetivoFinanceiroService.insert(objetivoFinanceiro);
-            return ResponseEntity.status(HttpStatus.CREATED).body(novoObjetivoFinanceiro);
-        }
-        catch(SQLException e) {
-            System.err.println("Erro ao tentar inserir novo objetivo: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    public ResponseEntity<ObjetivoFinanceiro> salvar(@RequestBody ObjetivoFinanceiro objetivoFinanceiro) throws SQLException, EntityNotFoundException, IllegalArgumentException {
+        Long userId = getAuthenticatedUserId();
+        objetivoFinanceiro.setUsuarioId(userId);
+
+        ObjetivoFinanceiro novoObjetivoFinanceiro = objetivoFinanceiroService.insert(objetivoFinanceiro);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(novoObjetivoFinanceiro);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ObjetivoFinanceiro> atualizar(
-            @PathVariable("id") Long id,
-            @RequestParam("userId") Long userId,
-            @RequestBody ObjetivoFinanceiro objetivoFinanceiro
-    ) {
-        try {
-            objetivoFinanceiro.setId(id);
+    public ResponseEntity<ObjetivoFinanceiro> atualizar(@PathVariable("id") Long id, @RequestBody ObjetivoFinanceiro objetivoFinanceiro) throws SQLException, IllegalArgumentException, EntityNotFoundException {
+        Long userId = getAuthenticatedUserId();
 
-            ObjetivoFinanceiro objetivoParaAtualizar = objetivoFinanceiroService.update(objetivoFinanceiro, userId);
+        objetivoFinanceiro.setId(id);
+        objetivoFinanceiro.setUsuarioId(userId);
 
-            return ResponseEntity.ok(objetivoParaAtualizar);
-        }
-        catch(SQLException e) {
-            System.err.println("Erro ao tentar atualizar o objetivo: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+        ObjetivoFinanceiro objetivoParaAtualizar = objetivoFinanceiroService.update(userId, objetivoFinanceiro);
+
+        return ResponseEntity.ok(objetivoParaAtualizar);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> remover(
-            @PathVariable("id") Long id,
-            @RequestParam("userId") Long userId
-    ) {
-        try {
-            objetivoFinanceiroService.remove(id, userId);
-            return ResponseEntity.noContent().build();
-        }
-        catch(EntityNotFoundException e) {
-            System.err.println(e.getMessage());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
-        catch(SQLException e) {
-            System.err.println("Erro ao tentar excluir o objetivo: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    public ResponseEntity<Void> remover(@PathVariable("id") Long id) throws SQLException, EntityNotFoundException, IllegalArgumentException {
+        Long userId = getAuthenticatedUserId();
+
+        objetivoFinanceiroService.remove(id, userId);
+
+        return ResponseEntity.noContent().build();
     }
 }
