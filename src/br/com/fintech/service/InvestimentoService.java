@@ -1,25 +1,32 @@
 package br.com.fintech.service;
 
-import br.com.fintech.dao.InvestimentoDAO;
 import br.com.fintech.exceptions.EntityNotFoundException;
 import br.com.fintech.model.Investimento;
+import br.com.fintech.repository.InvestimentoRepository;
 import org.springframework.stereotype.Service;
 
-import java.sql.SQLException;
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 @Service
 public class InvestimentoService extends CrudService<Investimento, Long> {
     private final TipoInvestimentoService tipoInvestimentoService;
     private final InstituicaoService instituicaoService;
+    private final InvestimentoRepository investimentoRepository;
 
-    public InvestimentoService(InvestimentoDAO investimentoDAO, TipoInvestimentoService tipoInvestimentoService, InstituicaoService instituicaoService) {
-        super(investimentoDAO);
+    public InvestimentoService(
+            InvestimentoRepository investimentoRepository,
+            TipoInvestimentoService tipoInvestimentoService,
+            InstituicaoService instituicaoService
+    ) {
+        super(investimentoRepository);
         this.tipoInvestimentoService = tipoInvestimentoService;
+        this.investimentoRepository = investimentoRepository;
         this.instituicaoService = instituicaoService;
     }
 
-    private void validarInvestimento(Investimento investimento) throws SQLException, EntityNotFoundException, IllegalArgumentException {
+    private void validarInvestimento(Investimento investimento) throws EntityNotFoundException, IllegalArgumentException {
         if(!investimento.validarValor()) {
             throw new IllegalArgumentException("Erro: o valor do investimento deve ser maior que zero!");
         }
@@ -41,7 +48,6 @@ public class InvestimentoService extends CrudService<Investimento, Long> {
         }
 
         Long idCategoria = investimento.getTipoInvestimentoId();
-
         if(idCategoria == null || idCategoria <= 0) {
             throw new IllegalArgumentException("Erro: O investimento deve estar vinculado a uma categoria válida!");
         }
@@ -56,18 +62,40 @@ public class InvestimentoService extends CrudService<Investimento, Long> {
         instituicaoService.fetchOrThrowException(idInstituicao);
     }
 
-    public Investimento insert(Investimento novoInvestimento) throws SQLException, IllegalArgumentException {
+    public Investimento insert(Investimento novoInvestimento) throws IllegalArgumentException, EntityNotFoundException {
         validarInvestimento(novoInvestimento);
-        return super.insert(novoInvestimento);
+        return super.save(novoInvestimento);
     }
 
-    public Investimento update(Long ownerId, Investimento investimentoParaAlterar) throws SQLException, EntityNotFoundException, IllegalArgumentException {
+    public Investimento update(Long ownerId, Investimento investimentoParaAlterar) throws EntityNotFoundException, IllegalArgumentException {
         validarInvestimento(investimentoParaAlterar);
 
         if(investimentoParaAlterar.getId() == null) {
             throw new IllegalArgumentException("Erro: ID do investimento a ser atualizado é obrigatório.");
         }
 
-        return super.update(ownerId, investimentoParaAlterar);
+        super.fetchOrThrowExceptionByOwner(investimentoParaAlterar.getId(), ownerId);
+
+        return super.save(investimentoParaAlterar);
+    }
+
+    public void remove(Long idEntity, Long ownerId) throws EntityNotFoundException {
+        super.deleteByIdAndOwnerId(idEntity, ownerId);
+    }
+
+    public Investimento getById(Long idEntity, Long ownerId) throws EntityNotFoundException {
+        return super.fetchOrThrowExceptionByOwner(idEntity, ownerId);
+    }
+
+    public List<Investimento> getUltimos(Long userId, int limite) {
+        return investimentoRepository.findTopNByUsuarioIdOrderByDataRealizacaoDesc(userId, limite);
+    }
+
+    public BigDecimal calcularTotal(Long userId) {
+        return investimentoRepository.calcularTotal(userId);
+    }
+
+    public BigDecimal calcularTotalPeriodo(Long userId, LocalDate inicio, LocalDate fim) {
+        return investimentoRepository.calcularTotalPeriodo(userId, inicio, fim);
     }
 }

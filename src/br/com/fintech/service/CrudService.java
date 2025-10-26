@@ -1,45 +1,45 @@
 package br.com.fintech.service;
 
-import br.com.fintech.dao.CrudDAO;
 import br.com.fintech.exceptions.EntityNotFoundException;
+import br.com.fintech.model.OwnedEntity;
+import br.com.fintech.repository.OwnedEntityRepository;
 
-import java.sql.SQLException;
 import java.util.List;
+import java.util.Optional;
 
-public abstract class CrudService<T, ID> {
-    protected final CrudDAO<T, ID> dao;
+public abstract class CrudService<T extends OwnedEntity, ID> {
+    protected final OwnedEntityRepository<T, ID> repository;
 
-    protected CrudService(CrudDAO<T, ID> dao) {
-        this.dao = dao;
+    protected CrudService(OwnedEntityRepository<T, ID> repository) {
+        this.repository = repository;
     }
 
-    public List<T> getAllByUserId(Long ownerId) throws SQLException {
-        return dao.getAllByUserId(ownerId);
+    public T save(T entity) {
+        return repository.save(entity);
     }
 
-    public T getById(ID idEntity, Long ownerId) throws SQLException {
-        return dao.getById(idEntity, ownerId);
+    public List<T> findAllByOwnerId(Long ownerId) {
+        return repository.findByUsuarioId(ownerId);
     }
 
-    protected T fetchOrThrowException(ID idEntity, Long ownerId) throws SQLException, EntityNotFoundException {
-        T entity = dao.getById(idEntity, ownerId);
+    public T fetchOrThrowExceptionByOwner(ID id, Long ownerId) throws EntityNotFoundException {
+        T entity = repository.findByIdAndUsuarioId(id, ownerId).orElseThrow(() ->
+                new EntityNotFoundException("Recurso não encontrado com o ID: " + id + " para o usuário, ou acesso negado.")
+        );
 
-        if(entity == null) {
-            throw new EntityNotFoundException("Entidade com ID: " + idEntity + " não encontrada para o usuário!");
+        if (entity.getUsuarioId() == null || !entity.getUsuarioId().equals(ownerId)) {
+            throw new EntityNotFoundException("Acesso negado. Recurso não pertence ao usuário.");
         }
 
         return entity;
     }
 
-    public T insert(T entity) throws SQLException {
-        return dao.insert(entity);
+    public Optional<T> findById(ID id) {
+        return repository.findById(id);
     }
 
-    public T update(Long ownerId, T entity) throws SQLException, EntityNotFoundException {
-        return dao.update(ownerId, entity);
-    }
-
-    public void remove(ID idEntity, Long ownerId) throws SQLException, EntityNotFoundException {
-        dao.remove(idEntity, ownerId);
+    public void deleteByIdAndOwnerId(ID id, Long ownerId) throws EntityNotFoundException {
+        T entity = fetchOrThrowExceptionByOwner(id, ownerId);
+        repository.delete(entity);
     }
 }

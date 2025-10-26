@@ -1,29 +1,29 @@
 package br.com.fintech.service;
 
-import br.com.fintech.dao.UsuarioDAO;
 import br.com.fintech.exceptions.EntityNotFoundException;
 import br.com.fintech.model.Usuario;
+import br.com.fintech.repository.UsuarioRepository;
 import br.com.fintech.service.security.JwtService;
 import br.com.fintech.service.security.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.sql.SQLException;
 import java.time.LocalDate;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 @Service
 public class UsuarioService {
-    private final UsuarioDAO dao;
+    private final UsuarioRepository repository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
 
-    public UsuarioService(UsuarioDAO dao, PasswordEncoder passwordEncoder, JwtService jwtService) {
-        this.dao = dao;
+    public UsuarioService(UsuarioRepository repository, PasswordEncoder passwordEncoder, JwtService jwtService) {
+        this.repository = repository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
     }
 
-    private void validarUsuario(Usuario usuario, boolean isInsert) throws IllegalArgumentException, SQLException {
+    private void validarUsuario(Usuario usuario, boolean isInsert) throws IllegalArgumentException {
         if(usuario.getNome() == null || usuario.getNome().trim().isEmpty()) {
             throw new IllegalArgumentException("Erro: Nome do usuário é obrigatório!");
         }
@@ -32,10 +32,14 @@ public class UsuarioService {
             throw new IllegalArgumentException("Erro: Usuário deve ter no mínimo 18 anos!");
         }
 
-        Usuario usuarioExistente = dao.getByEmail(usuario.getEmail());
+        Optional<Usuario> usuarioExistenteOpt = repository.findByEmail(usuario.getEmail());
 
-        if(usuarioExistente != null && (isInsert || !usuarioExistente.getId().equals(usuario.getId()))) {
-            throw new IllegalArgumentException("Erro: E-mail já cadastrado!");
+        if(usuarioExistenteOpt.isPresent()) {
+            Usuario usuarioExistente = usuarioExistenteOpt.get();
+
+            if (isInsert || !usuarioExistente.getId().equals(usuario.getId())) {
+                throw new IllegalArgumentException("Erro: E-mail já cadastrado!");
+            }
         }
 
         if(isInsert && isPasswordInvalid(usuario.getSenha())) {
@@ -53,73 +57,71 @@ public class UsuarioService {
         return !p.matcher(senha).matches();
     }
 
-    public Usuario getById(Long entityId, Long userId) throws SQLException, EntityNotFoundException {
+    public Usuario getById(Long entityId, Long userId) throws EntityNotFoundException, IllegalArgumentException {
         if(!entityId.equals(userId)) {
             throw new IllegalArgumentException("Erro: Usuário não tem permissão para buscar outros perfis!");
         }
 
-        Usuario usuario = dao.getById(entityId);
-        if (usuario == null) {
-            throw new EntityNotFoundException("Perfil de usuário não encontrado.");
-        }
-
-        return usuario;
+        return repository.findById(entityId).orElseThrow(() ->
+                new EntityNotFoundException("Perfil de usuário não encontrado.")
+        );
     }
 
-    public Usuario insert(Usuario novoUsuario) throws SQLException {
+    public Usuario insert(Usuario novoUsuario) throws IllegalArgumentException {
         validarUsuario(novoUsuario, true);
 
         String senhaHash = passwordEncoder.encode(novoUsuario.getSenha());
         novoUsuario.setSenha(senhaHash);
 
-        return dao.insert(novoUsuario);
+        return repository.save(novoUsuario);
     }
 
-    public Usuario update(Long userId, Usuario usuarioParaAlterar) throws SQLException, EntityNotFoundException {
+    public Usuario update(Long userId, Usuario usuarioParaAlterar) throws EntityNotFoundException, IllegalArgumentException {
         if (!userId.equals(usuarioParaAlterar.getId())) {
             throw new IllegalArgumentException("Erro: Usuário não tem permissão para alterar o perfil de terceiros!");
         }
 
-        Usuario usuarioAtual = dao.getById(userId);
-
-        if (usuarioAtual == null) {
-            throw new EntityNotFoundException("Usuário não encontrado para alteração.");
-        }
+        Usuario usuarioAtual = repository.findById(userId).orElseThrow(() ->
+                new EntityNotFoundException("Usuário não encontrado para alteração.")
+        );
 
         usuarioParaAlterar.setSenha(usuarioAtual.getSenha());
+        usuarioParaAlterar.setId(userId);
 
         validarUsuario(usuarioParaAlterar, false);
 
-        return dao.update(userId, usuarioParaAlterar);
+        return repository.save(usuarioParaAlterar);
     }
 
-    public void remove(Long id) throws SQLException, EntityNotFoundException {
-        dao.remove(id);
+    public void remove(Long id) throws EntityNotFoundException {
+        repository.findById(id).orElseThrow(() ->
+                new EntityNotFoundException("Usuário não encontrado para remoção.")
+        );
+
+        repository.deleteById(id);
     }
 
-    public Usuario changeEmail(Long idEntity, Long userId, String novoEmail) throws SQLException, EntityNotFoundException, IllegalArgumentException {
+    public Usuario changeEmail(Long idEntity, Long userId, String novoEmail) throws EntityNotFoundException, IllegalArgumentException {
         if (!idEntity.equals(userId)) {
             throw new IllegalArgumentException("Erro: Usuário não tem permissão para alterar o e-mail de terceiros!");
         }
 
-        Usuario usuario = dao.getById(idEntity);
-
-        if (usuario == null) {
-            throw new EntityNotFoundException("Usuário não encontrado para alteração de e-mail.");
-        }
+        Usuario usuario = repository.findById(idEntity).orElseThrow(() ->
+                new EntityNotFoundException("Usuário não encontrado para alteração de e-mail.")
+        );
 
         if(novoEmail == null || novoEmail.trim().isEmpty()) {
             throw new IllegalArgumentException("Erro: Novo e-mail não pode ser vazio.");
         }
 
-        Usuario usuarioComNovoEmail = dao.getByEmail(novoEmail);
-        if(usuarioComNovoEmail != null && !usuarioComNovoEmail.getId().equals(idEntity)) {
+        Optional<Usuario> usuarioComNovoEmailOpt = repository.findByEmail(novoEmail);
+        if(usuarioComNovoEmailOpt.isPresent() && !usuarioComNovoEmailOpt.get().getId().equals(idEntity)) {
             throw new IllegalArgumentException("Erro: E-mail já está em uso por outro usuário!");
         }
 
         usuario.setEmail(novoEmail);
 
-        return dao.update(userId, usuario);
+        return repository.save(usuario);
     }
 
     private void validatePasswordChange(String senhaAtualHash, String senhaAntigaTexto, String novaSenha1, String novaSenha2) throws IllegalArgumentException {
@@ -140,27 +142,25 @@ public class UsuarioService {
         }
     }
 
-    public Usuario changePassword(Long idEntity, Long userId, String senhaAntiga, String novaSenha1, String novaSenha2) throws SQLException, EntityNotFoundException {
+    public Usuario changePassword(Long idEntity, Long userId, String senhaAntiga, String novaSenha1, String novaSenha2) throws EntityNotFoundException, IllegalArgumentException {
         if (!idEntity.equals(userId)) {
             throw new IllegalArgumentException("Erro: Usuário não tem permissão para alterar a senha de terceiros!");
         }
 
-        Usuario usuario = dao.getById(idEntity);
-
-        if(usuario == null) {
-            throw new EntityNotFoundException("Usuário não encontrado para alteração de senha.");
-        }
+        Usuario usuario = repository.findById(idEntity).orElseThrow(() ->
+                new EntityNotFoundException("Usuário não encontrado para alteração de senha.")
+        );
 
         validatePasswordChange(usuario.getSenha(), senhaAntiga, novaSenha1, novaSenha2);
 
         String novaSenhaHash = passwordEncoder.encode(novaSenha1);
         usuario.setSenha(novaSenhaHash);
 
-        return dao.update(userId, usuario);
+        return repository.save(usuario);
     }
 
-    public String login(String email, String senha) throws SQLException, IllegalArgumentException {
-        Usuario usuario = dao.getByEmail(email);
+    public String login(String email, String senha) throws IllegalArgumentException {
+        Usuario usuario = repository.findByEmail(email).orElse(null);
 
         if(usuario == null) {
             throw new IllegalArgumentException("Erro: Credenciais inválidas (e-mail ou senha incorretos).");

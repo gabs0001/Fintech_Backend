@@ -7,7 +7,7 @@ import java.time.LocalDate;
 
 @Entity
 @Table(name = "T_SIF_OBJETIVO_FINANCEIRO")
-public class ObjetivoFinanceiro {
+public class ObjetivoFinanceiro implements OwnedEntity {
     @Id
     @GeneratedValue(
             strategy = GenerationType.SEQUENCE,
@@ -48,6 +48,7 @@ public class ObjetivoFinanceiro {
 
     public Long getId() { return this.id; }
 
+    @Override
     public Long getUsuarioId() { return this.usuarioId; }
 
     public String getNome() { return this.nome; }
@@ -60,6 +61,7 @@ public class ObjetivoFinanceiro {
 
     public void setId(Long id) { this.id = id; }
 
+    @Override
     public void setUsuarioId(Long usuarioId) { this.usuarioId = usuarioId; }
 
     public void setNome(String nome) { this.nome = nome; }

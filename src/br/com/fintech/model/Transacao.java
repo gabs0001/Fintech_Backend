@@ -5,7 +5,7 @@ import jakarta.persistence.*;
 import java.math.BigDecimal;
 
 @MappedSuperclass
-public abstract class Transacao {
+public abstract class Transacao implements OwnedEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "COD_TRANSACAO")
@@ -31,6 +31,7 @@ public abstract class Transacao {
 
     public Long getId() { return this.id; }
 
+    @Override
     public Long getUsuarioId() { return this.usuarioId; }
 
     public String getDescricao() { return this.descricao; }
@@ -39,6 +40,7 @@ public abstract class Transacao {
 
     public void setId(Long id) { this.id = id; }
 
+    @Override
     public void setUsuarioId(Long usuarioId) { this.usuarioId = usuarioId; }
 
     public void setDescricao(String descricao) { this.descricao = descricao; }

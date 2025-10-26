@@ -1,19 +1,19 @@
 package br.com.fintech.service;
 
-import br.com.fintech.dao.InstituicaoDAO;
 import br.com.fintech.exceptions.EntityNotFoundException;
 import br.com.fintech.model.Instituicao;
+import br.com.fintech.repository.InstituicaoRepository;
 import org.springframework.stereotype.Service;
 
-import java.sql.SQLException;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class InstituicaoService {
-    private final InstituicaoDAO dao;
+    private final InstituicaoRepository repository;
 
-    public InstituicaoService(InstituicaoDAO dao) {
-        this.dao = dao;
+    public InstituicaoService(InstituicaoRepository repository) {
+        this.repository = repository;
     }
 
     private void validarInstituicao(Instituicao instituicao) throws IllegalArgumentException {
@@ -22,41 +22,41 @@ public class InstituicaoService {
         }
     }
 
-    public Instituicao fetchOrThrowException(Long instituicaoId) throws SQLException, EntityNotFoundException {
-
-        Instituicao instituicao = dao.getById(instituicaoId);
-
-        if(instituicao == null) {
-            throw new EntityNotFoundException("Instituição com ID: " + instituicaoId + " não encontrada!");
-        }
-
-        return instituicao;
+    public Instituicao fetchOrThrowException(Long instituicaoId) throws EntityNotFoundException {
+        return repository.findById(instituicaoId).orElseThrow(() ->
+                new EntityNotFoundException("Instituição com ID: " + instituicaoId + " não encontrada!")
+        );
     }
 
-    public List<Instituicao> getAll() throws SQLException {
-        return dao.getAll();
+    public List<Instituicao> getAll() {
+        return repository.findAll();
     }
 
-    public Instituicao getById(Long idEntity) throws SQLException {
-        return dao.getById(idEntity);
+    public Optional<Instituicao> getById(Long idEntity) {
+        return repository.findById(idEntity);
     }
 
-    public Instituicao insert(Instituicao novaInstituicao) throws SQLException {
+    public Instituicao insert(Instituicao novaInstituicao) throws IllegalArgumentException {
         validarInstituicao(novaInstituicao);
-        return dao.insert(novaInstituicao);
+        return repository.save(novaInstituicao);
     }
 
-    public Instituicao update(Long idEntity, Instituicao instituicaoParaAlterar) throws SQLException, EntityNotFoundException {
+    public Instituicao update(Long idEntity, Instituicao instituicaoParaAlterar) throws EntityNotFoundException, IllegalArgumentException {
         validarInstituicao(instituicaoParaAlterar);
 
         if(instituicaoParaAlterar.getId() == null) {
             throw new IllegalArgumentException("Erro: ID da instituicao a ser atualizado é obrigatório.");
         }
 
-        return dao.update(idEntity, instituicaoParaAlterar);
+        fetchOrThrowException(idEntity);
+
+        instituicaoParaAlterar.setId(idEntity);
+
+        return repository.save(instituicaoParaAlterar);
     }
 
-    public void remove(Long id) throws SQLException, EntityNotFoundException {
-        dao.remove(id);
+    public void remove(Long id) throws EntityNotFoundException {
+        fetchOrThrowException(id);
+        repository.deleteById(id);
     }
 }

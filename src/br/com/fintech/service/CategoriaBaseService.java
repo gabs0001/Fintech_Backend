@@ -1,50 +1,47 @@
 package br.com.fintech.service;
 
-import br.com.fintech.dao.CategoriaBaseDAO;
 import br.com.fintech.exceptions.EntityNotFoundException;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 
-import java.sql.SQLException;
 import java.util.List;
 
 @Service
-public abstract class CategoriaBaseService<T, D extends CategoriaBaseDAO> {
-    private final D dao;
+public abstract class CategoriaBaseService<T, ID> {
+    private final JpaRepository<T, ID> repository;
 
-    public CategoriaBaseService(D dao) {
-        this.dao = dao;
+    public CategoriaBaseService(JpaRepository<T, ID> repository) {
+        this.repository = repository;
     }
 
     protected abstract void validar(T entidade) throws IllegalArgumentException;
 
-    protected abstract T fetchOrThrowException(Long categoriaId) throws SQLException, EntityNotFoundException;
-
-    public List<T> getAll() throws SQLException {
-        return (List<T>) dao.getAll();
+    public List<T> getAll() {
+        return repository.findAll();
     }
 
-    public T getById(Long entityId) throws SQLException {
-        Object result = dao.getById(entityId);
-        if(result == null) {
-            throw new EntityNotFoundException("Erro: Entidade de metadado (ID: " + entityId + ") não encontrada");
-        }
-        return (T) result;
+    public T fetchOrThrowException(ID entityId) throws EntityNotFoundException {
+        return repository.findById(entityId).orElseThrow(() ->
+                new EntityNotFoundException("Erro: Entidade com (ID: " + entityId + ") não encontrada.")
+        );
     }
 
-    public T insert(T novaCategoria) throws SQLException {
+    public T insert(T novaCategoria) throws IllegalArgumentException {
         validar(novaCategoria);
-        return dao.insert(novaCategoria);
+        return repository.save(novaCategoria);
     }
 
-    public T update(Long idEntity, T categoriaParaAlterar) throws SQLException, EntityNotFoundException {
+    public T update(ID idEntity, T categoriaParaAlterar) throws IllegalArgumentException, EntityNotFoundException {
         validar(categoriaParaAlterar);
 
-        T existente = getById(idEntity);
+        fetchOrThrowException(idEntity);
 
-        return dao.update(idEntity, categoriaParaAlterar);
+        return repository.save(categoriaParaAlterar);
     }
 
-    public void remove(Long id) throws SQLException, EntityNotFoundException {
-        dao.remove(id);
+    public void remove(ID id) throws EntityNotFoundException {
+        fetchOrThrowException(id);
+
+        repository.deleteById(id);
     }
 }
