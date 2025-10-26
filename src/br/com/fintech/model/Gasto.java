@@ -58,9 +58,9 @@ public class Gasto extends Transacao {
     @Override
     public String toString() {
         return "Gasto{" +
-                super.toString().substring(super.toString().indexOf("{") + 1, super.toString().length() - 1) + // Inclui a Transacao
+                super.toString().substring(super.toString().indexOf("{") + 1, super.toString().length() - 1) +
                 ", dataGasto=" + dataGasto +
-                ", categoriaGasto=" + (categoriaGasto != null ? categoriaGasto.getDescricao() : "N/A") + // Melhor exibir a descrição
+                ", categoriaGasto=" + (categoriaGasto != null ? categoriaGasto.getDescricao() : "N/A") +
                 '}';
     }
 }

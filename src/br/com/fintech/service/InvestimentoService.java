@@ -47,12 +47,20 @@ public class InvestimentoService extends CrudService<Investimento, Long> {
             throw new IllegalArgumentException("Erro: O nome do investimento é obrigatório!");
         }
 
+        if (investimento.getTipoInvestimento() == null) {
+            throw new IllegalArgumentException("Erro: O Tipo de Investimento é obrigatório!");
+        }
+
         Long idCategoria = investimento.getTipoInvestimentoId();
         if(idCategoria == null || idCategoria <= 0) {
             throw new IllegalArgumentException("Erro: O investimento deve estar vinculado a uma categoria válida!");
         }
 
-        tipoInvestimentoService.fetchOrThrowException(idCategoria);
+        tipoInvestimentoService.getById(idCategoria);
+
+        if (investimento.getInstituicao() == null) {
+            throw new IllegalArgumentException("Erro: A Instituição é obrigatória!");
+        }
 
         Long idInstituicao = investimento.getInstituicaoId();
         if(idInstituicao == null || idInstituicao <= 0) {

@@ -8,28 +8,26 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
-import java.sql.SQLException;
 import java.time.LocalDate;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/dashboard")
 public class DashboardController {
     private final RelatorioService relatorioService;
+    private static final Long MOCK_USER_ID = 1L;
 
     public DashboardController(RelatorioService relatorioService) {
         this.relatorioService = relatorioService;
     }
-
-    private Long getAuthenticatedUserId() { return 1L; }
 
     @GetMapping
     public ResponseEntity<DashboardDTO> buscarTodos(
             @RequestParam(value = "limite", defaultValue = "5") int limite,
             @RequestParam("inicio") LocalDate inicio,
             @RequestParam("fim") LocalDate fim
-    ) throws SQLException
-    {
-        Long userId = getAuthenticatedUserId();
+    ) {
+        Long userId = MOCK_USER_ID;
 
         DashboardDTO dashboardDTO =  relatorioService.getDashboard(userId, limite, inicio, fim);
 
@@ -37,8 +35,8 @@ public class DashboardController {
     }
 
     @GetMapping("/saldo-geral")
-    public ResponseEntity<BigDecimal> getSaldoGeral() throws SQLException {
-        Long userId = getAuthenticatedUserId();
+    public ResponseEntity<BigDecimal> getSaldoGeral() {
+        Long userId = MOCK_USER_ID;
 
         BigDecimal saldoGeral =  relatorioService.calcularSaldoGeral(userId);
 
@@ -46,8 +44,8 @@ public class DashboardController {
     }
 
     @GetMapping("/total-investido")
-    public ResponseEntity<BigDecimal> getTotalInvestido() throws SQLException {
-        Long userId = getAuthenticatedUserId();
+    public ResponseEntity<BigDecimal> getTotalInvestido() {
+        Long userId = MOCK_USER_ID;
 
         BigDecimal totalInvestido =  relatorioService.calcularTotalInvestido(userId);
 
@@ -55,38 +53,33 @@ public class DashboardController {
     }
 
     @GetMapping("/ultimo-gasto")
-    public ResponseEntity<Gasto> getUltimoGasto() throws SQLException {
-        Long userId = getAuthenticatedUserId();
+    public ResponseEntity<Gasto> getUltimoGasto() {
+        Long userId = MOCK_USER_ID;
 
-        Gasto gasto = relatorioService.getUltimoGasto(userId);
+        Optional<Gasto> optionalGasto = relatorioService.getUltimoGasto(userId);
 
-        if(gasto == null) {
-            return ResponseEntity.notFound().build();
-        }
-
-        return ResponseEntity.ok(gasto);
+        return optionalGasto
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @GetMapping("/ultimo-recebimento")
-    public ResponseEntity<Recebimento> getUltimoRecebimento() throws SQLException {
-        Long userId = getAuthenticatedUserId();
+    public ResponseEntity<Recebimento> getUltimoRecebimento() {
+        Long userId = MOCK_USER_ID;
 
-        Recebimento recebimento = relatorioService.getUltimoRecebimento(userId);
+        Optional<Recebimento> optionalRecebimento = relatorioService.getUltimoRecebimento(userId);
 
-        if(recebimento == null) {
-            return ResponseEntity.notFound().build();
-        }
-
-        return ResponseEntity.ok(recebimento);
+        return optionalRecebimento
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @GetMapping("/saldo-por-periodo")
     public ResponseEntity<BigDecimal> getSaldoPorPeriodo(
             @RequestParam LocalDate inicio,
             @RequestParam LocalDate fim
-    ) throws SQLException
-    {
-        Long userId = getAuthenticatedUserId();
+    ) {
+        Long userId = MOCK_USER_ID;
 
         BigDecimal saldoPeriodo = relatorioService.calcularSaldoPeriodo(userId, inicio, fim);
 

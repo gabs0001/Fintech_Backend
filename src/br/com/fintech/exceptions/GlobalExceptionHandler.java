@@ -5,54 +5,71 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.context.request.WebRequest;
-
-import java.sql.SQLException;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
+    private ApiErrorDTO createErrorDTO(HttpStatus status, String message, WebRequest request) {
+        String path = request.getDescription(false).replace("uri=", "");
+        return new ApiErrorDTO(
+                status.value(),
+                status.getReasonPhrase(),
+                message,
+                path
+        );
+    }
+
     // ----------------------------------------------------
     // TRATAMENTO DE ENTITY NOT FOUND (404 Not Found)
     // ----------------------------------------------------
 
     @ExceptionHandler(EntityNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
     public ResponseEntity<ApiErrorDTO> handleEntityNotFound(
             EntityNotFoundException ex, WebRequest request
     ) {
-        String path = request.getDescription(false).replace("uri=", "");
-        HttpStatus status = HttpStatus.NOT_FOUND;
-
-        ApiErrorDTO errorDetails = new ApiErrorDTO(
-                status.value(),
-                status.getReasonPhrase(),
+        ApiErrorDTO errorDetails = createErrorDTO(
+                HttpStatus.NOT_FOUND,
                 ex.getMessage(),
-                path
+                request
         );
-
-        return new ResponseEntity<>(errorDetails, status);
+        return new ResponseEntity<>(errorDetails, HttpStatus.NOT_FOUND);
     }
 
     // ----------------------------------------------------
-    // TRATAMENTO DE ERROS DE BANCO (500 Internal Server Error)
+    // TRATAMENTO DE ARGUMENTOS INVÁLIDOS (400 Bad Request)
     // ----------------------------------------------------
 
-    @ExceptionHandler(SQLException.class)
-    public ResponseEntity<ApiErrorDTO> handleSQLException(
-            SQLException ex, WebRequest request
+    @ExceptionHandler(IllegalArgumentException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseEntity<ApiErrorDTO> handleIllegalArgument(
+            IllegalArgumentException ex, WebRequest request
     ) {
-        String path = request.getDescription(false).replace("uri=", "");
-        HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
-
-        ApiErrorDTO errorDetails = new ApiErrorDTO(
-                status.value(),
-                status.getReasonPhrase(),
-                "Erro interno ao processar a solicitação no banco de dados.",
-                path
+        ApiErrorDTO errorDetails = createErrorDTO(
+                HttpStatus.BAD_REQUEST,
+                ex.getMessage(),
+                request
         );
+        return new ResponseEntity<>(errorDetails, HttpStatus.BAD_REQUEST);
+    }
 
-        // Loga o erro completo no console do servidor
-        System.err.println("SQL Exception: " + ex.getMessage());
+    // ----------------------------------------------------
+    // TRATAMENTO GENÉRICO (500 Internal Server Error)
+    // ----------------------------------------------------
 
-        return new ResponseEntity<>(errorDetails, status);
+    @ExceptionHandler(Exception.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ResponseEntity<ApiErrorDTO> handleAllUncaughtException(
+            Exception ex, WebRequest request
+    ) {
+        ex.printStackTrace();
+
+        ApiErrorDTO errorDetails = createErrorDTO(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "Ocorreu um erro interno inesperado. Por favor, tente novamente mais tarde.",
+                request
+        );
+        return new ResponseEntity<>(errorDetails, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

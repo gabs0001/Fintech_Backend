@@ -14,6 +14,14 @@ public abstract class CrudService<T extends OwnedEntity, ID> {
         this.repository = repository;
     }
 
+    public T getById(ID id, Long ownerId) throws EntityNotFoundException {
+        Optional<T> entity = repository.findByIdAndUsuarioId(id, ownerId);
+
+        return entity.orElseThrow(() ->
+                new EntityNotFoundException("Recurso não encontrado ou inacessível para o usuário.")
+        );
+    }
+
     public T save(T entity) {
         return repository.save(entity);
     }
@@ -32,10 +40,6 @@ public abstract class CrudService<T extends OwnedEntity, ID> {
         }
 
         return entity;
-    }
-
-    public Optional<T> findById(ID id) {
-        return repository.findById(id);
     }
 
     public void deleteByIdAndOwnerId(ID id, Long ownerId) throws EntityNotFoundException {

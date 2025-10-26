@@ -33,11 +33,15 @@ public class RecebimentoService extends CrudService<Recebimento, Long> {
             throw new IllegalArgumentException("Erro: A descrição do recebimento é obrigatória e não pode estar em branco!");
         }
 
-        if(recebimento.getTipoRecebimentoId() == null) {
+        if(recebimento.getTipoRecebimento() == null) {
             throw new IllegalArgumentException("Erro: A categoria do recebimento é obrigatória!");
         }
 
-        tipoRecebimentoService.fetchOrThrowException(recebimento.getTipoRecebimentoId());
+        if(recebimento.getTipoRecebimentoId() == null) {
+            throw new IllegalArgumentException("Erro: O id da categoria do recebimento é obrigatório!");
+        }
+
+        tipoRecebimentoService.getById(recebimento.getTipoRecebimentoId());
     }
 
     public Recebimento insert(Recebimento novoRecebimento) throws EntityNotFoundException, IllegalArgumentException {

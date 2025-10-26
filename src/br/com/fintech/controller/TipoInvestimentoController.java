@@ -7,7 +7,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.sql.SQLException;
 import java.util.List;
 
 @RestController
@@ -20,36 +19,36 @@ public class TipoInvestimentoController {
     }
 
     @GetMapping
-    public ResponseEntity<List<TipoInvestimento>> buscarTodos() throws SQLException {
+    public ResponseEntity<List<TipoInvestimento>> buscarTodos() {
         List<TipoInvestimento> todasAsCategorias = tipoInvestimentoService.getAll();
         return ResponseEntity.ok(todasAsCategorias);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<TipoInvestimento> buscarPorId(@PathVariable("id") Long id) throws SQLException {
+    public ResponseEntity<TipoInvestimento> buscarPorId(@PathVariable("id") Long id) {
         TipoInvestimento categoriaPorId = tipoInvestimentoService.getById(id);
-
-        if(categoriaPorId == null) {
-            return ResponseEntity.notFound().build();
-        }
 
         return ResponseEntity.ok(categoriaPorId);
     }
 
     @PostMapping
-    public ResponseEntity<TipoInvestimento> salvar(@RequestBody TipoInvestimento categoria) throws SQLException, EntityNotFoundException {
+    public ResponseEntity<TipoInvestimento> salvar(@RequestBody TipoInvestimento categoria) throws EntityNotFoundException {
         TipoInvestimento novaCategoria = tipoInvestimentoService.insert(categoria);
         return ResponseEntity.status(HttpStatus.CREATED).body(novaCategoria);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<TipoInvestimento> atualizar(@PathVariable("id") Long id, @RequestBody TipoInvestimento categoria) throws SQLException, EntityNotFoundException {
+    public ResponseEntity<TipoInvestimento> atualizar(@PathVariable("id") Long id, @RequestBody TipoInvestimento categoria)
+            throws EntityNotFoundException
+    {
+        categoria.setId(id);
+
         TipoInvestimento categoriaParaAtualizar = tipoInvestimentoService.update(id, categoria);
         return ResponseEntity.ok(categoriaParaAtualizar);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> remover(@PathVariable("id") Long id) throws SQLException, EntityNotFoundException {
+    public ResponseEntity<Void> remover(@PathVariable("id") Long id) throws EntityNotFoundException {
         tipoInvestimentoService.remove(id);
         return ResponseEntity.noContent().build();
     }

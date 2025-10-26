@@ -20,7 +20,7 @@ public abstract class CategoriaBaseService<T, ID> {
         return repository.findAll();
     }
 
-    public T fetchOrThrowException(ID entityId) throws EntityNotFoundException {
+    public T getById(ID entityId) throws EntityNotFoundException {
         return repository.findById(entityId).orElseThrow(() ->
                 new EntityNotFoundException("Erro: Entidade com (ID: " + entityId + ") não encontrada.")
         );
@@ -34,13 +34,13 @@ public abstract class CategoriaBaseService<T, ID> {
     public T update(ID idEntity, T categoriaParaAlterar) throws IllegalArgumentException, EntityNotFoundException {
         validar(categoriaParaAlterar);
 
-        fetchOrThrowException(idEntity);
+        getById(idEntity);
 
         return repository.save(categoriaParaAlterar);
     }
 
     public void remove(ID id) throws EntityNotFoundException {
-        fetchOrThrowException(id);
+        getById(id);
 
         repository.deleteById(id);
     }

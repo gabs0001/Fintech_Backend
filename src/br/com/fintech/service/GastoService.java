@@ -33,11 +33,15 @@ public class GastoService extends CrudService<Gasto, Long> {
             throw new IllegalArgumentException("Erro: A descrição do gasto é obrigatória e não pode estar em branco!");
         }
 
-        if(gasto.getCategoriaGastoId() == null) {
+        if(gasto.getCategoriaGasto() == null) {
             throw new IllegalArgumentException("Erro: A Categoria do gasto é obrigatória!");
         }
 
-        categoriaGastoService.fetchOrThrowException(gasto.getCategoriaGastoId());
+        if(gasto.getCategoriaGastoId() == null) {
+            throw new IllegalArgumentException("Erro: O ID da Categoria do gasto é obrigatório!");
+        }
+
+        categoriaGastoService.getById(gasto.getCategoriaGastoId());
     }
 
     public Gasto insert(Gasto novoGasto) throws IllegalArgumentException, EntityNotFoundException {
