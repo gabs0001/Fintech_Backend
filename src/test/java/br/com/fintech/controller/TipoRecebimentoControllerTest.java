@@ -24,7 +24,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-public class TipoRecebimentoController {
+public class TipoRecebimentoControllerTest {
     private MockMvc mockMvc;
     private ObjectMapper objectMapper;
 

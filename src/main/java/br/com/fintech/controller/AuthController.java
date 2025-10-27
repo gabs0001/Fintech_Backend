@@ -14,8 +14,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.sql.SQLException;
-
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -26,7 +24,7 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<UsuarioResponse> cadastro(@RequestBody Usuario usuario) throws SQLException, EntityNotFoundException, IllegalArgumentException {
+    public ResponseEntity<UsuarioResponse> cadastro(@RequestBody Usuario usuario) throws EntityNotFoundException, IllegalArgumentException {
         Usuario novoUsuario = usuarioService.insert(usuario);
 
         UsuarioResponse response = new UsuarioResponse(novoUsuario);
@@ -35,7 +33,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) throws SQLException, IllegalArgumentException {
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) throws IllegalArgumentException {
         String jwtToken = usuarioService.login(request.getEmail(), request.getSenha());
 
         AuthResponse response = new AuthResponse();

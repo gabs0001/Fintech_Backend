@@ -7,7 +7,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.sql.SQLException;
 import java.util.List;
 
 @RestController
@@ -27,11 +26,8 @@ public class InstituicaoController {
 
     @GetMapping("{id}")
     public ResponseEntity<Instituicao> buscarPorId(@PathVariable Long id) {
-        Instituicao instituicaoPorId = instituicaoService.getById(id);
-
-        if(instituicaoPorId == null) {
-            return ResponseEntity.notFound().build();
-        }
+        Instituicao instituicaoPorId = instituicaoService.getById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Instituição com id: " + id + "não encontrada!"));
 
         return ResponseEntity.ok(instituicaoPorId);
     }
