@@ -36,8 +36,8 @@ class RelatorioServiceTest {
     private final BigDecimal SALDO_PERIODO_ESPERADO = new BigDecimal("3000.00");
     private final BigDecimal TOTAL_INVESTIDO_ESPERADO = new BigDecimal("2500.50");
 
-    private final Gasto MOCK_ULTIMO_GASTO = new Gasto(3L, USER_ID, "Cinema", null, new BigDecimal("100.00"), LocalDate.of(2025, 3, 5));
-    private final Recebimento MOCK_ULTIMO_RECEBIMENTO = new Recebimento(11L, USER_ID, "Bônus", null, new BigDecimal("1000.00"), LocalDate.of(2025, 2, 28));
+    private final Gasto MOCK_ULTIMO_GASTO = new Gasto(USER_ID, "Cinema", null, new BigDecimal("100.00"), LocalDate.of(2025, 3, 5));
+    private final Recebimento MOCK_ULTIMO_RECEBIMENTO = new Recebimento(USER_ID, "Bônus", null, new BigDecimal("1000.00"), LocalDate.of(2025, 2, 28));
 
     // ====================================================================
     // 1. TESTES DE CÁLCULO DE SALDO GERAL
@@ -148,8 +148,8 @@ class RelatorioServiceTest {
     void getUltimosGastos_DeveRetornarListaLimitadaEOrdenada() {
         int limite = 2;
         List<Gasto> ultimosMock = List.of(
-                new Gasto(2L, USER_ID, "Gasto B (MAIS RECENTE)", null, new BigDecimal("20"), LocalDate.of(2025, 4, 15)),
-                new Gasto(3L, USER_ID, "Gasto C", null, new BigDecimal("30"), LocalDate.of(2025, 4, 5))
+                new Gasto(USER_ID, "Gasto B (MAIS RECENTE)", null, new BigDecimal("20"), LocalDate.of(2025, 4, 15)),
+                new Gasto(USER_ID, "Gasto C", null, new BigDecimal("30"), LocalDate.of(2025, 4, 5))
         );
 
         when(gastoService.getUltimos(USER_ID, limite)).thenReturn(ultimosMock);
@@ -165,8 +165,8 @@ class RelatorioServiceTest {
     void getUltimosRecebimentos_DeveRetornarListaLimitadaEOrdenada() {
         int limite = 2;
         List<Recebimento> ultimosMock = List.of(
-                new Recebimento(2L, USER_ID, "Recebimento B (MAIS RECENTE)", null, new BigDecimal("20"), LocalDate.of(2025, 4, 15)),
-                new Recebimento(3L, USER_ID, "Recebimento C", null, new BigDecimal("30"), LocalDate.of(2025, 4, 5))
+                new Recebimento(USER_ID, "Recebimento B (MAIS RECENTE)", null, new BigDecimal("20"), LocalDate.of(2025, 4, 15)),
+                new Recebimento(USER_ID, "Recebimento C", null, new BigDecimal("30"), LocalDate.of(2025, 4, 5))
         );
 
         when(recebimentoService.getUltimos(USER_ID, limite)).thenReturn(ultimosMock);
@@ -175,7 +175,7 @@ class RelatorioServiceTest {
 
         assertEquals(limite, ultimosRecebimentos.size());
         assertEquals("Recebimento B (MAIS RECENTE)", ultimosRecebimentos.get(0).getDescricao());
-        verify(gastoService).getUltimos(USER_ID, limite);
+        verify(recebimentoService).getUltimos(USER_ID, limite);
     }
 
     // ====================================================================

@@ -2,6 +2,7 @@ package br.com.fintech.repository;
 
 import br.com.fintech.model.Instituicao;
 import br.com.fintech.model.Investimento;
+import br.com.fintech.model.TipoInvestimento;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -26,18 +27,27 @@ class InvestimentoRepositoryTest {
     private static final Long MOCK_USER_ID = 1L;
     private static final Long OTHER_USER_ID = 2L;
 
+    private Instituicao instituicao;
+    private TipoInvestimento tipoInvestimento;
+
     @BeforeEach
     void setUp() {
-        Instituicao instituicao = new Instituicao();
+        instituicao = new Instituicao();
         instituicao.setNome("TesteBank");
         entityManager.persistAndFlush(instituicao);
+
+        tipoInvestimento = new TipoInvestimento();
+        tipoInvestimento.setDescricao("Renda Fixa");
+        entityManager.persistAndFlush(tipoInvestimento);
 
         Investimento inv1 = new Investimento();
         inv1.setUsuarioId(MOCK_USER_ID);
         inv1.setNome("Tesouro Selic");
         inv1.setValor(new BigDecimal("5000.00"));
         inv1.setDataRealizacao(LocalDate.of(2023, 1, 15));
+        inv1.setDescricao("Inv Selic");
         inv1.setInstituicao(instituicao);
+        inv1.setTipoInvestimento(tipoInvestimento);
         entityManager.persistAndFlush(inv1);
 
         Investimento inv2 = new Investimento();
@@ -45,7 +55,9 @@ class InvestimentoRepositoryTest {
         inv2.setNome("CDB XPTO");
         inv2.setValor(new BigDecimal("10000.00"));
         inv2.setDataRealizacao(LocalDate.of(2024, 6, 1));
+        inv2.setDescricao("Inv CDB");
         inv2.setInstituicao(instituicao);
+        inv2.setTipoInvestimento(tipoInvestimento);
         entityManager.persistAndFlush(inv2);
 
         Investimento inv3 = new Investimento();
@@ -53,14 +65,19 @@ class InvestimentoRepositoryTest {
         inv3.setNome("Fundo Imobiliário");
         inv3.setValor(new BigDecimal("2000.00"));
         inv3.setDataRealizacao(LocalDate.of(2025, 1, 1));
+        inv3.setDescricao("Inv FII");
         inv3.setInstituicao(instituicao);
+        inv3.setTipoInvestimento(tipoInvestimento);
         entityManager.persistAndFlush(inv3);
 
         Investimento invOutroUser = new Investimento();
         invOutroUser.setUsuarioId(OTHER_USER_ID);
+        invOutroUser.setNome("Ações");
         invOutroUser.setValor(new BigDecimal("50000.00"));
         invOutroUser.setDataRealizacao(LocalDate.of(2024, 1, 1));
+        invOutroUser.setDescricao("Inv Ações");
         invOutroUser.setInstituicao(instituicao);
+        invOutroUser.setTipoInvestimento(tipoInvestimento);
         entityManager.persistAndFlush(invOutroUser);
     }
 

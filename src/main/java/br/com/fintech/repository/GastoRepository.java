@@ -2,20 +2,26 @@ package br.com.fintech.repository;
 
 import br.com.fintech.model.Gasto;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.stereotype.Repository;
+import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
-@Repository
 public interface GastoRepository extends OwnedEntityRepository<Gasto, Long> {
-    @Query("SELECT SUM (g.valor) FROM Gasto g WHERE g.usuarioId = :userId")
-    BigDecimal calcularTotal(Long userId);
+    @Query("SELECT COALESCE(SUM(g.valor), 0) FROM Gasto g WHERE g.usuarioId = :userId")
+    BigDecimal calcularTotal(@Param("userId") Long userId);
 
-    @Query("SELECT SUM(g.valor) FROM Gasto g WHERE g.usuarioId = :userId AND g.dataGasto BETWEEN :inicio AND :fim")
-    BigDecimal calcularTotalPeriodo(Long userId, LocalDate inicio, LocalDate fim);
+    @Query("SELECT COALESCE(SUM(g.valor), 0) FROM Gasto g WHERE g.usuarioId = :userId AND g.dataGasto BETWEEN :inicio AND :fim")
+    BigDecimal calcularTotalPeriodo(
+            @Param("userId") Long userId,
+            @Param("inicio") LocalDate inicio,
+            @Param("fim") LocalDate fim
+    );
 
-    List<Gasto> findTopByUsuarioIdOrderByDataGastoDesc(Long usuarioId);
-    List<Gasto> findTopNByUsuarioIdOrderByDataGastoDesc(Long usuarioId, int limite);
+    @Query(
+            value = "SELECT * FROM T_SIF_GASTO g WHERE g.COD_USUARIO = ?1 ORDER BY g.DAT_GASTO DESC LIMIT ?2",
+            nativeQuery = true
+    )
+    List<Gasto> findUltimosGastos(Long usuarioId, int limite);
 }

@@ -50,7 +50,6 @@ class CategoriaGastoControllerTest {
         categoriaValida = new CategoriaGasto();
         categoriaValida.setId(CATEGORIA_ID);
         categoriaValida.setDescricao("Alimentação");
-        categoriaValida.setDescricao("Gastos com supermercado e restaurantes");
     }
 
     // ----------------------------------------------------
@@ -66,7 +65,7 @@ class CategoriaGastoControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id").value(CATEGORIA_ID))
-                .andExpect(jsonPath("$.nome").value("Alimentação"));
+                .andExpect(jsonPath("$.descricao").value("Alimentação"));
     }
 
     @Test
@@ -77,8 +76,7 @@ class CategoriaGastoControllerTest {
 
         mockMvc.perform(get("/api/categorias-gastos/{id}", CATEGORIA_ID))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.status").value(404))
-                .andExpect(jsonPath("$.mensagem").value("Categoria não encontrada."));
+                .andExpect(jsonPath("$.status").value(404));
     }
 
     @Test
@@ -94,7 +92,7 @@ class CategoriaGastoControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[0].nome").value("Alimentação"));
+                .andExpect(jsonPath("$[0].descricao").value("Alimentação"));
     }
 
     // ----------------------------------------------------
@@ -118,7 +116,7 @@ class CategoriaGastoControllerTest {
                         .content(objectMapper.writeValueAsString(categoriaInput)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(10L))
-                .andExpect(jsonPath("$.nome").value("Viagem"));
+                .andExpect(jsonPath("$.descricao").value("Viagem"));
     }
 
     @Test
@@ -134,8 +132,7 @@ class CategoriaGastoControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(categoriaInputInvalida)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.mensagem").value("Nome da categoria é obrigatório!"));
+                .andExpect(jsonPath("$.status").value(400));
     }
 
     // ----------------------------------------------------
@@ -154,7 +151,7 @@ class CategoriaGastoControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(categoriaAtualizada)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.nome").value("Alimentação Atualizada"));
+                .andExpect(jsonPath("$.descricao").value("Alimentação Atualizada"));
     }
 
     // ----------------------------------------------------

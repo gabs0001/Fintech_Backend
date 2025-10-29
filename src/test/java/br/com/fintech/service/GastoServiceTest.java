@@ -14,6 +14,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Optional; // Importação necessária
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -37,7 +38,7 @@ class GastoServiceTest {
     private CategoriaGasto mockCategoria;
 
     @BeforeEach
-    void setUp() throws EntityNotFoundException {
+    void setUp() {
         mockCategoria = new CategoriaGasto();
         mockCategoria.setId(CATEGORIA_ID);
 
@@ -48,13 +49,12 @@ class GastoServiceTest {
         gastoValido.setDescricao("Compra de supermercado");
         gastoValido.setDataGasto(LocalDate.now());
         gastoValido.setCategoriaGasto(mockCategoria);
-
-        doReturn(mockCategoria).when(categoriaGastoService).getById(CATEGORIA_ID);
     }
 
     @Test
     @DisplayName("Deve inserir um novo Gasto válido com sucesso")
-    void insert_GastoValido_DeveInserirComSucesso() throws Exception {
+    void insert_GastoValido_DeveInserirComSucesso() {
+        doReturn(mockCategoria).when(categoriaGastoService).getById(CATEGORIA_ID);
         when(gastoRepository.save(any(Gasto.class))).thenReturn(gastoValido);
 
         Gasto gastoSalvo = gastoService.insert(gastoValido);
@@ -122,13 +122,15 @@ class GastoServiceTest {
 
     @Test
     @DisplayName("Deve atualizar um Gasto existente com sucesso")
-    void update_GastoValido_DeveAtualizarComSucesso() throws Exception {
+    void update_GastoValido_DeveAtualizarComSucesso() {
+        doReturn(Optional.of(gastoValido)).when(gastoRepository).findByIdAndUsuarioId(GASTO_ID, MOCK_USER_ID);
         when(gastoRepository.save(any(Gasto.class))).thenReturn(gastoValido);
 
         Gasto gastoAtualizado = gastoService.update(MOCK_USER_ID, gastoValido);
 
         assertNotNull(gastoAtualizado);
 
+        verify(gastoRepository, times(1)).findByIdAndUsuarioId(GASTO_ID, MOCK_USER_ID);
         verify(gastoRepository, times(1)).save(gastoValido);
     }
 
@@ -143,12 +145,13 @@ class GastoServiceTest {
     }
 
     @Test
-    @DisplayName("Não deve atualizar Gasto se ele não existir ou não pertencer ao usuário (Segurança)")
-    void update_GastoNaoExistente_DeveLancarEntityNotFoundException() throws EntityNotFoundException {
-        doThrow(new EntityNotFoundException("Gasto inacessível")).when(gastoService).fetchOrThrowExceptionByOwner(GASTO_ID, MOCK_USER_ID);
+    @DisplayName("Não deve atualizar Gasto se ele não pertencer ao usuário (Segurança)")
+    void update_GastoNaoExistente_DeveLancarEntityNotFoundException() {
+        doReturn(Optional.empty()).when(gastoRepository).findByIdAndUsuarioId(GASTO_ID, MOCK_USER_ID);
 
         assertThrows(EntityNotFoundException.class, () -> gastoService.update(MOCK_USER_ID, gastoValido));
 
+        verify(gastoRepository, times(1)).findByIdAndUsuarioId(GASTO_ID, MOCK_USER_ID);
         verify(gastoRepository, never()).save(any(Gasto.class));
     }
 }

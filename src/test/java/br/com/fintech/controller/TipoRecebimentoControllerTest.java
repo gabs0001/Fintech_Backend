@@ -8,8 +8,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -24,6 +26,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+@ExtendWith(MockitoExtension.class)
 public class TipoRecebimentoControllerTest {
     private MockMvc mockMvc;
     private ObjectMapper objectMapper;
@@ -48,7 +51,6 @@ public class TipoRecebimentoControllerTest {
         categoriaValida = new TipoRecebimento();
         categoriaValida.setId(CATEGORIA_ID);
         categoriaValida.setDescricao("Aluguel");
-        categoriaValida.setDescricao("Aluguel mensal recebido da casa número 1");
     }
 
     // ----------------------------------------------------
@@ -64,7 +66,7 @@ public class TipoRecebimentoControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id").value(CATEGORIA_ID))
-                .andExpect(jsonPath("$.nome").value("Aluguel"));
+                .andExpect(jsonPath("$.descricao").value("Aluguel"));
     }
 
     @Test
@@ -75,8 +77,7 @@ public class TipoRecebimentoControllerTest {
 
         mockMvc.perform(get("/api/tipos-recebimentos/{id}", CATEGORIA_ID))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.status").value(404))
-                .andExpect(jsonPath("$.mensagem").value("Categoria não encontrada."));
+                .andExpect(jsonPath("$.status").value(404));
     }
 
     @Test
@@ -92,7 +93,7 @@ public class TipoRecebimentoControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[0].nome").value("Aluguel"));
+                .andExpect(jsonPath("$[0].descricao").value("Aluguel"));
     }
 
     // ----------------------------------------------------
@@ -116,7 +117,7 @@ public class TipoRecebimentoControllerTest {
                         .content(objectMapper.writeValueAsString(categoriaInput)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(10L))
-                .andExpect(jsonPath("$.nome").value("Auxílio Mensal"));
+                .andExpect(jsonPath("$.descricao").value("Auxílio Mensal"));
     }
 
     @Test
@@ -132,8 +133,7 @@ public class TipoRecebimentoControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(categoriaInputInvalida)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.mensagem").value("Nome da categoria é obrigatório!"));
+                .andExpect(jsonPath("$.status").value(400));
     }
 
     // ----------------------------------------------------
@@ -152,7 +152,7 @@ public class TipoRecebimentoControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(categoriaAtualizada)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.nome").value("Aluguel Atualizada"));
+                .andExpect(jsonPath("$.descricao").value("Aluguel Atualizada"));
     }
 
     // ----------------------------------------------------

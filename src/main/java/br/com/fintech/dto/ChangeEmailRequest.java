@@ -8,4 +8,8 @@ public class ChangeEmailRequest {
     public void setNovoEmail(String novoEmail) {
         this.novoEmail = novoEmail;
     }
+
+    public ChangeEmailRequest(String novoEmail) {
+        this.novoEmail = novoEmail;
+    }
 }

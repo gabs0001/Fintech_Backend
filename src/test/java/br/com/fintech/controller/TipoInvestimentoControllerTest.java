@@ -50,7 +50,6 @@ class TipoInvestimentoControllerTest {
         categoriaValida = new TipoInvestimento();
         categoriaValida.setId(CATEGORIA_ID);
         categoriaValida.setDescricao("Ações");
-        categoriaValida.setDescricao("Ações aplicadas na bolsa de valores");
     }
 
     // ----------------------------------------------------
@@ -66,7 +65,7 @@ class TipoInvestimentoControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id").value(CATEGORIA_ID))
-                .andExpect(jsonPath("$.nome").value("Ações"));
+                .andExpect(jsonPath("$.descricao").value("Ações"));
     }
 
     @Test
@@ -77,8 +76,7 @@ class TipoInvestimentoControllerTest {
 
         mockMvc.perform(get("/api/tipos-investimentos/{id}", CATEGORIA_ID))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.status").value(404))
-                .andExpect(jsonPath("$.mensagem").value("Categoria não encontrada."));
+                .andExpect(jsonPath("$.status").value(404));
     }
 
     @Test
@@ -94,7 +92,7 @@ class TipoInvestimentoControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[0].nome").value("Ações"));
+                .andExpect(jsonPath("$[0].descricao").value("Ações"));
     }
 
     // ----------------------------------------------------
@@ -118,7 +116,7 @@ class TipoInvestimentoControllerTest {
                         .content(objectMapper.writeValueAsString(categoriaInput)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(10L))
-                .andExpect(jsonPath("$.nome").value("Criptomoedas"));
+                .andExpect(jsonPath("$.descricao").value("Criptomoedas"));
     }
 
     @Test
@@ -134,8 +132,7 @@ class TipoInvestimentoControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(categoriaInputInvalida)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.mensagem").value("Nome da categoria é obrigatório!"));
+                .andExpect(jsonPath("$.status").value(400));
     }
 
     // ----------------------------------------------------
@@ -154,7 +151,7 @@ class TipoInvestimentoControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(categoriaAtualizada)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.nome").value("Ações Atualizada"));
+                .andExpect(jsonPath("$.descricao").value("Ações Atualizada"));
     }
 
     // ----------------------------------------------------

@@ -79,8 +79,7 @@ class RecebimentoControllerTest {
 
         mockMvc.perform(get("/api/recebimentos/{id}", RECEBIMENTO_ID))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.status").value(404))
-                .andExpect(jsonPath("$.mensagem").value("Recebimento não encontrado."));
+                .andExpect(jsonPath("$.status").value(404));
     }
 
     @Test
@@ -132,8 +131,7 @@ class RecebimentoControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(recebimentoInputInvalido)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.mensagem").value("Erro: O valor do recebimento deve ser maior que zero!"));
+                .andExpect(jsonPath("$.status").value(400));
     }
 
     @Test

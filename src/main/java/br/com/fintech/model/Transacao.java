@@ -8,7 +8,7 @@ import java.math.BigDecimal;
 public abstract class Transacao implements OwnedEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "COD_TRANSACAO")
+    @Column(name = "COD_TRANSACAO", nullable = false)
     private Long id;
 
     @Column(name = "COD_USUARIO", nullable = false)
@@ -22,8 +22,7 @@ public abstract class Transacao implements OwnedEntity {
 
     public Transacao() {}
 
-    public Transacao(Long id, Long usuarioId, String descricao, BigDecimal valor) {
-        this.id = id;
+    public Transacao(Long usuarioId, String descricao, BigDecimal valor) {
         this.usuarioId = usuarioId;
         this.descricao = descricao;
         this.valor = valor;
@@ -31,26 +30,22 @@ public abstract class Transacao implements OwnedEntity {
 
     public Long getId() { return this.id; }
 
+    public void setId(Long id) { this.id = id; }
+
     @Override
     public Long getUsuarioId() { return this.usuarioId; }
-
-    public String getDescricao() { return this.descricao; }
-
-    public BigDecimal getValor() { return this.valor; }
-
-    public void setId(Long id) { this.id = id; }
 
     @Override
     public void setUsuarioId(Long usuarioId) { this.usuarioId = usuarioId; }
 
-    public void setDescricao(String descricao) { this.descricao = descricao; }
+    public String getDescricao() { return this.descricao; }
+    public BigDecimal getValor() { return this.valor; }
 
+    public void setDescricao(String descricao) { this.descricao = descricao; }
     public void setValor(BigDecimal valor) { this.valor = valor; }
 
     public abstract String getTipoMovimentacao();
-
     public abstract int getMultiplicador();
-
     public boolean validarValor() { return this.getValor().compareTo(BigDecimal.ZERO) > 0; }
 
     @Override

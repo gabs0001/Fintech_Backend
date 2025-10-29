@@ -15,6 +15,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -43,7 +44,7 @@ class InvestimentoServiceTest {
     private Instituicao mockInstituicao;
 
     @BeforeEach
-    void setUp() throws EntityNotFoundException {
+    void setUp() {
         mockTipo = new TipoInvestimento();
         mockTipo.setId(TIPO_ID);
         mockInstituicao = new Instituicao();
@@ -60,14 +61,13 @@ class InvestimentoServiceTest {
 
         investimentoValido.setTipoInvestimento(mockTipo);
         investimentoValido.setInstituicao(mockInstituicao);
-
-        doReturn(mockTipo).when(tipoInvestimentoService).getById(TIPO_ID);
-        doReturn(mockInstituicao).when(instituicaoService).fetchOrThrowException(INSTITUICAO_ID);
     }
 
     @Test
     @DisplayName("Deve inserir um novo Investimento válido com sucesso")
-    void insert_InvestimentoValido_DeveInserirComSucesso() throws Exception {
+    void insert_InvestimentoValido_DeveInserirComSucesso() {
+        doReturn(mockTipo).when(tipoInvestimentoService).getById(TIPO_ID);
+        doReturn(mockInstituicao).when(instituicaoService).fetchOrThrowException(INSTITUICAO_ID);
         when(investimentoRepository.save(any(Investimento.class))).thenReturn(investimentoValido);
 
         Investimento investimentoSalvo = investimentoService.insert(investimentoValido);
@@ -104,11 +104,22 @@ class InvestimentoServiceTest {
     @Test
     @DisplayName("Não deve inserir Investimento se a data de vencimento for passada/hoje")
     void insert_InvestimentoComDataVencimentoPassada_DeveLancarException() {
+        investimentoValido.setDataVencimento(LocalDate.now().minusDays(1));
+        assertThrows(IllegalArgumentException.class, () -> investimentoService.insert(investimentoValido));
+
         investimentoValido.setDataVencimento(LocalDate.now());
         assertThrows(IllegalArgumentException.class, () -> investimentoService.insert(investimentoValido));
 
         investimentoValido.setDataVencimento(null);
-        assertDoesNotThrow(() -> investimentoService.insert(investimentoValido));
+
+        try {
+            doReturn(mockTipo).when(tipoInvestimentoService).getById(TIPO_ID);
+            doReturn(mockInstituicao).when(instituicaoService).fetchOrThrowException(INSTITUICAO_ID);
+            when(investimentoRepository.save(any(Investimento.class))).thenReturn(investimentoValido);
+            assertDoesNotThrow(() -> investimentoService.insert(investimentoValido));
+        } catch (Exception e) {
+            fail("Não deveria lançar exceção para data de vencimento nula.");
+        }
     }
 
     @Test
@@ -137,12 +148,14 @@ class InvestimentoServiceTest {
 
     @Test
     @DisplayName("Não deve inserir se a Instituição (objeto) for nula")
-    void insert_InvestimentoSemInstituicaoObjetoValida_DeveLancarException() {
+    void insert_InvestimentoSemInstituicaoObjetoValida_DeveLancarException() throws EntityNotFoundException {
+        doReturn(mockTipo).when(tipoInvestimentoService).getById(TIPO_ID);
+
         investimentoValido.setInstituicao(null);
 
         assertThrows(IllegalArgumentException.class, () -> investimentoService.insert(investimentoValido));
 
-        verify(tipoInvestimentoService, times(1)).getById(any());
+        verify(tipoInvestimentoService, times(1)).getById(TIPO_ID);
         verify(instituicaoService, never()).fetchOrThrowException(any());
     }
 
@@ -152,11 +165,15 @@ class InvestimentoServiceTest {
         doThrow(new EntityNotFoundException("Tipo não encontrado")).when(tipoInvestimentoService).getById(TIPO_ID);
 
         assertThrows(EntityNotFoundException.class, () -> investimentoService.insert(investimentoValido));
+
+        verify(instituicaoService, never()).fetchOrThrowException(any());
     }
 
     @Test
     @DisplayName("Não deve inserir se Instituicao for inválida (ID inexistente)")
     void insert_InvestimentoComInstituicaoInexistente_DeveLancarEntityNotFoundException() throws EntityNotFoundException {
+        doReturn(mockTipo).when(tipoInvestimentoService).getById(TIPO_ID);
+
         doThrow(new EntityNotFoundException("Instituição não encontrada")).when(instituicaoService).fetchOrThrowException(INSTITUICAO_ID);
 
         assertThrows(EntityNotFoundException.class, () -> investimentoService.insert(investimentoValido));
@@ -164,12 +181,14 @@ class InvestimentoServiceTest {
 
     @Test
     @DisplayName("Deve atualizar um Investimento existente com sucesso")
-    void update_InvestimentoValido_DeveAtualizarComSucesso() throws Exception {
+    void update_InvestimentoValido_DeveAtualizarComSucesso() {
+        doReturn(Optional.of(investimentoValido)).when(investimentoRepository).findByIdAndUsuarioId(INVESTIMENTO_ID, MOCK_USER_ID);
         when(investimentoRepository.save(any(Investimento.class))).thenReturn(investimentoValido);
 
         Investimento investimentoAtualizado = investimentoService.update(MOCK_USER_ID, investimentoValido);
 
         assertNotNull(investimentoAtualizado);
+        verify(investimentoRepository, times(1)).findByIdAndUsuarioId(INVESTIMENTO_ID, MOCK_USER_ID);
         verify(investimentoRepository, times(1)).save(investimentoValido);
     }
 
@@ -185,11 +204,12 @@ class InvestimentoServiceTest {
 
     @Test
     @DisplayName("Não deve atualizar Investimento se ele não pertencer ao usuário (Segurança)")
-    void update_InvestimentoNaoExistente_DeveLancarEntityNotFoundException() throws EntityNotFoundException {
-        doThrow(new EntityNotFoundException("Investimento inacessível")).when(investimentoService).fetchOrThrowExceptionByOwner(INVESTIMENTO_ID, MOCK_USER_ID);
+    void update_InvestimentoNaoExistente_DeveLancarEntityNotFoundException() {
+        doReturn(Optional.empty()).when(investimentoRepository).findByIdAndUsuarioId(INVESTIMENTO_ID, MOCK_USER_ID);
 
         assertThrows(EntityNotFoundException.class, () -> investimentoService.update(MOCK_USER_ID, investimentoValido));
 
+        verify(investimentoRepository, times(1)).findByIdAndUsuarioId(INVESTIMENTO_ID, MOCK_USER_ID);
         verify(investimentoRepository, never()).save(any(Investimento.class));
     }
 }

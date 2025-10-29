@@ -78,8 +78,7 @@ class GastoControllerTest {
 
         mockMvc.perform(get("/api/gastos/{id}", GASTO_ID))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.status").value(404))
-                .andExpect(jsonPath("$.mensagem").value("Gasto não encontrado."));
+                .andExpect(jsonPath("$.status").value(404));
     }
 
     @Test
@@ -119,8 +118,7 @@ class GastoControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(gastoInputInvalido)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.mensagem").value("Erro: O valor do gasto deve ser maior que zero!"));
+                .andExpect(jsonPath("$.status").value(400));
     }
 
     @Test

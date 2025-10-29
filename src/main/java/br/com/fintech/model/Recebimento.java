@@ -23,8 +23,8 @@ public class Recebimento extends Transacao {
 
     public Recebimento() {}
 
-    public Recebimento(Long id, Long usuarioId, String descricao, TipoRecebimento tipoRecebimento, BigDecimal valor, LocalDate dataRecebimento) {
-        super(id, usuarioId, descricao, valor);
+    public Recebimento(Long usuarioId, String descricao, TipoRecebimento tipoRecebimento, BigDecimal valor, LocalDate dataRecebimento) {
+        super(usuarioId, descricao, valor);
         this.dataRecebimento = dataRecebimento;
         this.tipoRecebimento = tipoRecebimento;
     }

@@ -70,7 +70,7 @@ public class RecebimentoService extends CrudService<Recebimento, Long> {
     }
 
     public List<Recebimento> getUltimos(Long userId, int limite) {
-        return recebimentoRepository.findTopNByUsuarioIdOrderByDataRecebimentoDesc(userId, limite);
+        return recebimentoRepository.findUltimosRecebimentos(userId, limite);
     }
 
     public BigDecimal calcularTotal(Long userId) {

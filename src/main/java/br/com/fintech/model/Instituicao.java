@@ -8,11 +8,11 @@ public class Instituicao {
     @Id
     @GeneratedValue(
             strategy = GenerationType.SEQUENCE,
-            generator = "SEQ_SIF_INSTUICAO"
+            generator = "SEQ_SIF_INSTITUICAO"
     )
     @SequenceGenerator(
-            name = "SEQ_SIF_INSTUICAO",
-            sequenceName = "SEQ_SIF_INSTUICAO",
+            name = "SEQ_SIF_INSTITUICAO",
+            sequenceName = "SEQ_SIF_INSTITUICAO",
             allocationSize = 1
     )
     private Long id;

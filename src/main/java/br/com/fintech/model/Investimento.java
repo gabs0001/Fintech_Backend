@@ -33,8 +33,8 @@ public class Investimento extends Transacao {
 
     public Investimento() {}
 
-    public Investimento(Long id, Long usuarioId, String descricao, TipoInvestimento tipoInvestimento, BigDecimal valor, String nome, LocalDate dataRealizacao, LocalDate dataVencimento, Instituicao instituicao) {
-        super(id, usuarioId, descricao, valor);
+    public Investimento(Long usuarioId, String descricao, TipoInvestimento tipoInvestimento, BigDecimal valor, String nome, LocalDate dataRealizacao, LocalDate dataVencimento, Instituicao instituicao) {
+        super(usuarioId, descricao, valor);
         this.nome = nome;
         this.dataRealizacao = dataRealizacao;
         this.dataVencimento = dataVencimento;

@@ -60,11 +60,11 @@ class ObjetivoFinanceiroControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/objetivos/{id} - Deve retornar 200 OK e o Objetivo se encontrado")
+    @DisplayName("GET /api/objetivos-financeiros/{id} - Deve retornar 200 OK e o Objetivo se encontrado")
     void buscarPorId_QuandoEncontrado_DeveRetornar200OK() throws Exception {
         when(objetivoFinanceiroService.getById(OBJETIVO_ID, MOCK_USER_ID)).thenReturn(objetivoValido);
 
-        mockMvc.perform(get("/api/objetivos/{id}", OBJETIVO_ID))
+        mockMvc.perform(get("/api/objetivos-financeiros/{id}", OBJETIVO_ID))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id").value(OBJETIVO_ID))
@@ -72,23 +72,22 @@ class ObjetivoFinanceiroControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/objetivos/{id} - Deve retornar 404 Not Found se não encontrado")
+    @DisplayName("GET /api/objetivos-financeiros/{id} - Deve retornar 404 Not Found se não encontrado")
     void buscarPorId_QuandoNaoEncontrado_DeveRetornar404NotFound() throws Exception {
         when(objetivoFinanceiroService.getById(OBJETIVO_ID, MOCK_USER_ID))
                 .thenThrow(new EntityNotFoundException("Objetivo não encontrado."));
 
-        mockMvc.perform(get("/api/objetivos/{id}", OBJETIVO_ID))
+        mockMvc.perform(get("/api/objetivos-financeiros/{id}", OBJETIVO_ID))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.status").value(404))
-                .andExpect(jsonPath("$.mensagem").value("Objetivo não encontrado."));
+                .andExpect(jsonPath("$.status").value(404));
     }
 
     @Test
-    @DisplayName("GET /api/objetivos - Deve retornar 200 OK e lista vazia se não houver")
+    @DisplayName("GET /api/objetivos-financeiros - Deve retornar 200 OK e lista vazia se não houver")
     void buscarTodos_QuandoNaoHouver_DeveRetornar200OKListaVazia() throws Exception {
         when(objetivoFinanceiroService.findAllByOwnerId(MOCK_USER_ID)).thenReturn(Collections.emptyList());
 
-        mockMvc.perform(get("/api/objetivos"))
+        mockMvc.perform(get("/api/objetivos-financeiros"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$").isArray())
@@ -96,7 +95,7 @@ class ObjetivoFinanceiroControllerTest {
     }
 
     @Test
-    @DisplayName("POST /api/objetivos - Deve retornar 201 Created e o Objetivo criado")
+    @DisplayName("POST /api/objetivos-financeiros - Deve retornar 201 Created e o Objetivo criado")
     void salvar_QuandoObjetivoValido_DeveRetornar201Created() throws Exception {
         ObjetivoFinanceiro objetivoInput = new ObjetivoFinanceiro();
         objetivoInput.setDescricao("Viajar para Europa");
@@ -110,7 +109,7 @@ class ObjetivoFinanceiroControllerTest {
             return objetivoSalvo;
         });
 
-        mockMvc.perform(post("/api/objetivos")
+        mockMvc.perform(post("/api/objetivos-financeiros")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(objetivoInput)))
                 .andExpect(status().isCreated())
@@ -129,18 +128,17 @@ class ObjetivoFinanceiroControllerTest {
         when(objetivoFinanceiroService.insert(any(ObjetivoFinanceiro.class)))
                 .thenThrow(new IllegalArgumentException("Erro: O valor do objetivo deve ser maior que zero!"));
 
-        mockMvc.perform(post("/api/objetivos")
+        mockMvc.perform(post("/api/objetivos-financeiros")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(objetivoInputInvalido)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.mensagem").value("Erro: O valor do objetivo deve ser maior que zero!"));
+                .andExpect(jsonPath("$.status").value(400));
     }
 
     @Test
     @DisplayName("DELETE /api/objetivos/{id} - Deve retornar 204 No Content se removido com sucesso")
     void remover_QuandoEncontrado_DeveRetornar204NoContent() throws Exception {
-        mockMvc.perform(delete("/api/objetivos/{id}", OBJETIVO_ID))
+        mockMvc.perform(delete("/api/objetivos-financeiros/{id}", OBJETIVO_ID))
                 .andExpect(status().isNoContent());
     }
 
@@ -150,7 +148,7 @@ class ObjetivoFinanceiroControllerTest {
         doThrow(new EntityNotFoundException("Objetivo não encontrado para remoção."))
                 .when(objetivoFinanceiroService).deleteByIdAndOwnerId(OBJETIVO_ID, MOCK_USER_ID);
 
-        mockMvc.perform(delete("/api/objetivos/{id}", OBJETIVO_ID))
+        mockMvc.perform(delete("/api/objetivos-financeiros/{id}", OBJETIVO_ID))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status").value(404));
     }

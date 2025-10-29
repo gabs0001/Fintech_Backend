@@ -14,6 +14,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -37,7 +38,7 @@ class RecebimentoServiceTest {
     private TipoRecebimento mockTipoRecebimento;
 
     @BeforeEach
-    void setUp() throws EntityNotFoundException {
+    void setUp() {
         mockTipoRecebimento = new TipoRecebimento();
         mockTipoRecebimento.setId(TIPO_RECEBIMENTO_ID);
 
@@ -48,8 +49,6 @@ class RecebimentoServiceTest {
         recebimentoValido.setDescricao("Salário Mensal");
         recebimentoValido.setDataRecebimento(LocalDate.now());
         recebimentoValido.setTipoRecebimento(mockTipoRecebimento);
-
-        doReturn(mockTipoRecebimento).when(tipoRecebimentoService).getById(TIPO_RECEBIMENTO_ID);
     }
 
     // ----------------------------------------------------
@@ -58,7 +57,8 @@ class RecebimentoServiceTest {
 
     @Test
     @DisplayName("Deve inserir um novo Recebimento válido com sucesso")
-    void insert_RecebimentoValido_DeveInserirComSucesso() throws Exception {
+    void insert_RecebimentoValido_DeveInserirComSucesso() {
+        doReturn(mockTipoRecebimento).when(tipoRecebimentoService).getById(TIPO_RECEBIMENTO_ID);
         when(recebimentoRepository.save(any(Recebimento.class))).thenReturn(recebimentoValido);
 
         Recebimento recebimentoSalvo = recebimentoService.insert(recebimentoValido);
@@ -98,6 +98,9 @@ class RecebimentoServiceTest {
         recebimentoValido.setDescricao("");
         assertThrows(IllegalArgumentException.class, () -> recebimentoService.insert(recebimentoValido));
 
+        recebimentoValido.setDescricao(null);
+        assertThrows(IllegalArgumentException.class, () -> recebimentoService.insert(recebimentoValido));
+
         verify(recebimentoRepository, never()).save(any(Recebimento.class));
     }
 
@@ -114,16 +117,18 @@ class RecebimentoServiceTest {
 
     @Test
     @DisplayName("Não deve inserir Recebimento se o TipoRecebimentoId for nulo (mesmo que o objeto seja válido)")
-    void insert_RecebimentoComTipoRecebimentoSemId_DeveLancarException() throws EntityNotFoundException {
-        TipoRecebimento tipoSemId = new TipoRecebimento();
-        recebimentoValido.setTipoRecebimento(tipoSemId);
+    void insert_RecebimentoComTipoRecebimentoSemId_DeveLancarException() {
+        TipoRecebimento tipoSemIdMock = mock(TipoRecebimento.class);
+
+        when(tipoSemIdMock.getId()).thenReturn(null);
+
+        recebimentoValido.setTipoRecebimento(tipoSemIdMock);
 
         assertThrows(IllegalArgumentException.class, () -> recebimentoService.insert(recebimentoValido));
 
         verify(tipoRecebimentoService, never()).getById(any());
         verify(recebimentoRepository, never()).save(any(Recebimento.class));
     }
-
 
     @Test
     @DisplayName("Não deve inserir Recebimento se o TipoRecebimento não existir (EntityNotFoundException)")
@@ -141,13 +146,15 @@ class RecebimentoServiceTest {
 
     @Test
     @DisplayName("Deve atualizar um Recebimento existente com sucesso")
-    void update_RecebimentoValido_DeveAtualizarComSucesso() throws Exception {
+    void update_RecebimentoValido_DeveAtualizarComSucesso() {
+        doReturn(Optional.of(recebimentoValido)).when(recebimentoRepository).findByIdAndUsuarioId(RECEBIMENTO_ID, MOCK_USER_ID);
         when(recebimentoRepository.save(any(Recebimento.class))).thenReturn(recebimentoValido);
 
         Recebimento recebimentoAtualizado = recebimentoService.update(MOCK_USER_ID, recebimentoValido);
 
         assertNotNull(recebimentoAtualizado);
 
+        verify(recebimentoRepository, times(1)).findByIdAndUsuarioId(RECEBIMENTO_ID, MOCK_USER_ID);
         verify(recebimentoRepository, times(1)).save(recebimentoValido);
     }
 
@@ -163,11 +170,12 @@ class RecebimentoServiceTest {
 
     @Test
     @DisplayName("Não deve atualizar Recebimento se ele não pertencer ao usuário (Segurança)")
-    void update_RecebimentoNaoExistente_DeveLancarEntityNotFoundException() throws EntityNotFoundException {
-        doThrow(new EntityNotFoundException("Recebimento inacessível")).when(recebimentoService).fetchOrThrowExceptionByOwner(RECEBIMENTO_ID, MOCK_USER_ID);
+    void update_RecebimentoNaoExistente_DeveLancarEntityNotFoundException() {
+        doReturn(Optional.empty()).when(recebimentoRepository).findByIdAndUsuarioId(RECEBIMENTO_ID, MOCK_USER_ID);
 
         assertThrows(EntityNotFoundException.class, () -> recebimentoService.update(MOCK_USER_ID, recebimentoValido));
 
+        verify(recebimentoRepository, times(1)).findByIdAndUsuarioId(RECEBIMENTO_ID, MOCK_USER_ID);
         verify(recebimentoRepository, never()).save(any(Recebimento.class));
     }
 }

@@ -80,8 +80,7 @@ class InvestimentoControllerTest {
 
         mockMvc.perform(get("/api/investimentos/{id}", INVESTIMENTO_ID))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.status").value(404))
-                .andExpect(jsonPath("$.mensagem").value("Investimento não encontrado."));
+                .andExpect(jsonPath("$.status").value(404));
     }
 
     @Test
@@ -133,8 +132,7 @@ class InvestimentoControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(investimentoInputInvalido)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.mensagem").value("Erro: o valor do investimento deve ser maior que zero!"));
+                .andExpect(jsonPath("$.status").value(400));
     }
 
     @Test

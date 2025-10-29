@@ -96,7 +96,7 @@ public class InvestimentoService extends CrudService<Investimento, Long> {
     }
 
     public List<Investimento> getUltimos(Long userId, int limite) {
-        return investimentoRepository.findTopNByUsuarioIdOrderByDataRealizacaoDesc(userId, limite);
+        return investimentoRepository.findUltimosInvestimentos(userId, limite);
     }
 
     public BigDecimal calcularTotal(Long userId) {

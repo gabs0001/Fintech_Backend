@@ -25,8 +25,8 @@ public class Gasto extends Transacao {
         super();
     }
 
-    public Gasto(Long id, Long usuarioId, String descricao, CategoriaGasto categoriaGasto, BigDecimal valor, LocalDate dataGasto) {
-        super(id, usuarioId, descricao, valor);
+    public Gasto(Long usuarioId, String descricao, CategoriaGasto categoriaGasto, BigDecimal valor, LocalDate dataGasto) {
+        super(usuarioId, descricao, valor);
         this.dataGasto = dataGasto;
         this.categoriaGasto = categoriaGasto;
     }

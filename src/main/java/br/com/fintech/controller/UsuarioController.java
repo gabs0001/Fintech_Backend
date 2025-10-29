@@ -15,19 +15,15 @@ import java.sql.SQLException;
 @RequestMapping("/api/usuarios")
 public class UsuarioController {
     private final UsuarioService usuarioService;
+    private static final Long MOCK_USER_ID = 1L;
 
     public UsuarioController(UsuarioService usuarioService) {
         this.usuarioService = usuarioService;
     }
 
-    //simulando um id logado no sistema
-    private Long getAuthenticatedUserId() {
-        return 1L;
-    }
-
     @GetMapping("/me")
-    public ResponseEntity<UsuarioResponse> buscarPerfil() throws SQLException, EntityNotFoundException, IllegalArgumentException {
-        Long userId = getAuthenticatedUserId();
+    public ResponseEntity<UsuarioResponse> buscarPerfil() throws EntityNotFoundException, IllegalArgumentException {
+        Long userId = MOCK_USER_ID;
 
         Usuario usuario = usuarioService.getById(userId, userId);
 
@@ -35,8 +31,8 @@ public class UsuarioController {
     }
 
     @PatchMapping("/email")
-    public ResponseEntity<UsuarioResponse> alterarEmail(@RequestBody ChangeEmailRequest request) throws SQLException, EntityNotFoundException, IllegalArgumentException {
-        Long userId = getAuthenticatedUserId();
+    public ResponseEntity<UsuarioResponse> alterarEmail(@RequestBody ChangeEmailRequest request) throws EntityNotFoundException, IllegalArgumentException {
+        Long userId = MOCK_USER_ID;
 
         Usuario usuarioParaAtualizar = usuarioService.changeEmail(userId, userId, request.getNovoEmail());
 
@@ -44,8 +40,8 @@ public class UsuarioController {
     }
 
     @PatchMapping("/senha")
-    public ResponseEntity<Void> alterarSenha(@RequestBody ChangePasswordRequest request) throws SQLException, EntityNotFoundException, IllegalArgumentException {
-        Long userId = getAuthenticatedUserId();
+    public ResponseEntity<Void> alterarSenha(@RequestBody ChangePasswordRequest request) throws EntityNotFoundException, IllegalArgumentException {
+        Long userId = MOCK_USER_ID;
 
         usuarioService.changePassword(
                 userId,
@@ -60,7 +56,7 @@ public class UsuarioController {
 
     @DeleteMapping("/me")
     public ResponseEntity<Void> removerConta() throws SQLException, EntityNotFoundException, IllegalArgumentException {
-        Long userId = getAuthenticatedUserId();
+        Long userId = MOCK_USER_ID;
 
         usuarioService.remove(userId);
 

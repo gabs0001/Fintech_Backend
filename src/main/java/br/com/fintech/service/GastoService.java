@@ -70,7 +70,7 @@ public class GastoService extends CrudService<Gasto, Long> {
     }
 
     public List<Gasto> getUltimos(Long userId, int limite) {
-        return gastoRepository.findTopNByUsuarioIdOrderByDataGastoDesc(userId, limite);
+        return gastoRepository.findUltimosGastos(userId, limite);
     }
 
     public BigDecimal calcularTotal(Long userId) {

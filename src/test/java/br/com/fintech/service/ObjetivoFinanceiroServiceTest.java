@@ -13,6 +13,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -46,7 +47,7 @@ class ObjetivoFinanceiroServiceTest {
 
     @Test
     @DisplayName("Deve inserir um novo Objetivo Financeiro válido com sucesso")
-    void insert_ObjetivoValido_DeveInserirComSucesso() throws Exception {
+    void insert_ObjetivoValido_DeveInserirComSucesso() {
         when(objetivoFinanceiroRepository.save(any(ObjetivoFinanceiro.class))).thenReturn(objetivoValido);
 
         ObjetivoFinanceiro objetivoSalvo = objetivoFinanceiroService.insert(objetivoValido);
@@ -104,12 +105,14 @@ class ObjetivoFinanceiroServiceTest {
 
     @Test
     @DisplayName("Deve atualizar um Objetivo existente com sucesso")
-    void update_ObjetivoValido_DeveAtualizarComSucesso() throws Exception {
+    void update_ObjetivoValido_DeveAtualizarComSucesso() {
+        doReturn(Optional.of(objetivoValido)).when(objetivoFinanceiroRepository).findByIdAndUsuarioId(OBJETIVO_ID, MOCK_USER_ID);
         when(objetivoFinanceiroRepository.save(any(ObjetivoFinanceiro.class))).thenReturn(objetivoValido);
 
         ObjetivoFinanceiro objetivoAtualizado = objetivoFinanceiroService.update(MOCK_USER_ID, objetivoValido);
 
         assertNotNull(objetivoAtualizado);
+        verify(objetivoFinanceiroRepository, times(1)).findByIdAndUsuarioId(OBJETIVO_ID, MOCK_USER_ID);
         verify(objetivoFinanceiroRepository, times(1)).save(objetivoValido);
     }
 
@@ -125,11 +128,12 @@ class ObjetivoFinanceiroServiceTest {
 
     @Test
     @DisplayName("Não deve atualizar Objetivo se ele não pertencer ao usuário (Segurança)")
-    void update_ObjetivoNaoExistente_DeveLancarEntityNotFoundException() throws EntityNotFoundException {
-        doThrow(new EntityNotFoundException("Objetivo inacessível")).when(objetivoFinanceiroService).fetchOrThrowExceptionByOwner(OBJETIVO_ID, MOCK_USER_ID);
+    void update_ObjetivoNaoExistente_DeveLancarEntityNotFoundException() {
+        doReturn(Optional.empty()).when(objetivoFinanceiroRepository).findByIdAndUsuarioId(OBJETIVO_ID, MOCK_USER_ID);
 
         assertThrows(EntityNotFoundException.class, () -> objetivoFinanceiroService.update(MOCK_USER_ID, objetivoValido));
 
+        verify(objetivoFinanceiroRepository, times(1)).findByIdAndUsuarioId(OBJETIVO_ID, MOCK_USER_ID);
         verify(objetivoFinanceiroRepository, never()).save(any(ObjetivoFinanceiro.class));
     }
 }
