@@ -1,14 +1,16 @@
 package br.com.fintech.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
 
 @Entity
+@JsonIgnoreProperties({" hibernateLazyInitializer", "handler" })
 @Table(name = "T_SIF_USUARIO")
 public class Usuario {
     @Id
+    @Column(name = "COD_USUARIO")
     @GeneratedValue(
             strategy = GenerationType.SEQUENCE,
             generator = "SEQ_SIF_USUARIO"
@@ -32,8 +34,7 @@ public class Usuario {
     @Column(name = "TXT_EMAIL", nullable = false, unique = true, length = 150)
     private String email;
 
-    @JsonIgnore
-    @Column(name = "TXT_SENHA", nullable = false, length = 60)
+    @Column(name = "TXT_SENHA", nullable = false, length = 150)
     private String senha;
 
     public Usuario() {}
@@ -57,7 +58,6 @@ public class Usuario {
 
     public String getEmail() { return this.email; }
 
-    @JsonIgnore
     public String getSenha() { return this.senha; }
 
     public void setId(Long id) { this.id = id; }

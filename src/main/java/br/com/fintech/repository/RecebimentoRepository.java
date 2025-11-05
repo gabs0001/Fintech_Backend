@@ -20,7 +20,7 @@ public interface RecebimentoRepository extends OwnedEntityRepository<Recebimento
     );
 
     @Query(
-            value = "SELECT * FROM T_SIF_RECEBIMENTO r WHERE r.COD_USUARIO = ?1 ORDER BY r.DAT_RECEBIMENTO DESC LIMIT ?2",
+            value = "SELECT * FROM T_SIF_RECEBIMENTO r WHERE r.COD_USUARIO = ?1 ORDER BY r.DAT_RECEBIMENTO DESC FETCH FIRST ?2 ROWS ONLY",
             nativeQuery = true
     )
     List<Recebimento> findUltimosRecebimentos(Long usuarioId, int limite);

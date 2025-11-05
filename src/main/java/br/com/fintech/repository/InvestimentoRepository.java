@@ -20,7 +20,7 @@ public interface InvestimentoRepository extends OwnedEntityRepository<Investimen
     );
 
     @Query(
-            value = "SELECT * FROM T_SIF_INVESTIMENTO i WHERE i.COD_USUARIO = ?1 ORDER BY i.DAT_REALIZACAO DESC LIMIT ?2",
+            value = "SELECT * FROM T_SIF_INVESTIMENTO i WHERE i.COD_USUARIO = ?1 ORDER BY i.DAT_REALIZACAO DESC FETCH FIRST ?2 ROWS ONLY",
             nativeQuery = true
     )
     List<Investimento> findUltimosInvestimentos(Long usuarioId, int limite);

@@ -1,8 +1,5 @@
 package br.com.fintech.dto;
 
-import br.com.fintech.model.Gasto;
-import br.com.fintech.model.Recebimento;
-
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -10,20 +7,20 @@ public class DashboardDTO {
     private BigDecimal saldoGeral;
     private BigDecimal saldoPeriodo;
     private BigDecimal totalInvestido;
-    private Gasto ultimoGasto;
-    private List<Gasto> ultimosGastos;
-    private Recebimento ultimoRecebimento;
-    private List<Recebimento> ultimosRecebimentos;
+    private GastoDTO ultimoGasto;
+    private List<GastoDTO> ultimosGastos;
+    private RecebimentoDTO ultimoRecebimento;
+    private List<RecebimentoDTO> ultimosRecebimentos;
     private Long userId;
 
     public DashboardDTO(
             BigDecimal saldoGeral,
             BigDecimal saldoPeriodo,
             BigDecimal totalInvestido,
-            Gasto ultimoGasto,
-            List<Gasto> ultimosGastos,
-            Recebimento ultimoRecebimento,
-            List<Recebimento> ultimosRecebimentos,
+            GastoDTO ultimoGasto,
+            List<GastoDTO> ultimosGastos,
+            RecebimentoDTO ultimoRecebimento,
+            List<RecebimentoDTO> ultimosRecebimentos,
             Long userId
     ) {
         this.saldoGeral = saldoGeral;
@@ -36,19 +33,35 @@ public class DashboardDTO {
         this.userId = userId;
     }
 
-    public BigDecimal getSaldoGeral() { return this.saldoGeral; }
+    public BigDecimal getSaldoGeral() {
+        return saldoGeral;
+    }
 
-    public BigDecimal getSaldoPeriodo() { return this.saldoPeriodo; }
+    public BigDecimal getSaldoPeriodo() {
+        return saldoPeriodo;
+    }
 
-    public BigDecimal getTotalInvestido() { return this.totalInvestido; }
+    public BigDecimal getTotalInvestido() {
+        return totalInvestido;
+    }
 
-    public Gasto getUltimoGasto() { return this.ultimoGasto; }
+    public GastoDTO getUltimoGasto() {
+        return ultimoGasto;
+    }
 
-    public List<Gasto> getUltimosGastos() { return this.ultimosGastos; }
+    public List<GastoDTO> getUltimosGastos() {
+        return ultimosGastos;
+    }
 
-    public Recebimento getUltimoRecebimento() { return this.ultimoRecebimento; }
+    public RecebimentoDTO getUltimoRecebimento() {
+        return ultimoRecebimento;
+    }
 
-    public List<Recebimento> getUltimosRecebimentos() { return this.ultimosRecebimentos; }
+    public List<RecebimentoDTO> getUltimosRecebimentos() {
+        return ultimosRecebimentos;
+    }
 
-    public Long getUserId() { return this.userId; }
+    public Long getUserId() {
+        return userId;
+    }
 }

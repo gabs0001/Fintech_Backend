@@ -1,14 +1,17 @@
 package br.com.fintech.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
+@JsonIgnoreProperties({" hibernateLazyInitializer", "handler" })
 @Table(name = "T_SIF_OBJETIVO_FINANCEIRO")
 public class ObjetivoFinanceiro implements OwnedEntity {
     @Id
+    @Column(name = "COD_OBJETIVO")
     @GeneratedValue(
             strategy = GenerationType.SEQUENCE,
             generator = "SEQ_SIF_OBJETIVO_FINANCEIRO"

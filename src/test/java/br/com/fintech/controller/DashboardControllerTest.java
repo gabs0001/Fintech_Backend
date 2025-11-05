@@ -1,6 +1,8 @@
 package br.com.fintech.controller;
 
 import br.com.fintech.dto.DashboardDTO;
+import br.com.fintech.dto.GastoDTO;
+import br.com.fintech.dto.RecebimentoDTO;
 import br.com.fintech.exceptions.GlobalExceptionHandler;
 import br.com.fintech.model.Gasto;
 import br.com.fintech.model.Recebimento;
@@ -76,13 +78,16 @@ class DashboardControllerTest {
         BigDecimal saldoPeriodo = new BigDecimal("4500.0");
         BigDecimal totalInvestido = new BigDecimal("50000.0");
 
+        GastoDTO gastoDTO = new GastoDTO(new Gasto());
+        RecebimentoDTO recebimentoDTO = new RecebimentoDTO(new Recebimento());
+
         DashboardDTO dashboardDTO = new DashboardDTO(
                 saldoGeral,
                 saldoPeriodo,
                 totalInvestido,
-                new Gasto(),
+                gastoDTO,
                 Collections.emptyList(),
-                new Recebimento(),
+                recebimentoDTO,
                 Collections.emptyList(),
                 MOCK_USER_ID
         );
@@ -98,7 +103,6 @@ class DashboardControllerTest {
                         .param("inicio", INICIO_PERIODO.toString())
                         .param("fim", FIM_PERIODO.toString()))
                 .andExpect(status().isOk())
-                // Usando toString(), que agora retorna "4500.0"
                 .andExpect(jsonPath("$.saldoPeriodo").value(saldoPeriodo.toString()))
                 .andExpect(jsonPath("$.saldoGeral").value(saldoGeral.toString()))
                 .andExpect(jsonPath("$.totalInvestido").value(totalInvestido.toString()))

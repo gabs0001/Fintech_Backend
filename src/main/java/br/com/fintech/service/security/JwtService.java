@@ -11,7 +11,7 @@ import java.util.Map;
 
 @Service
 public class JwtService {
-    private static final String SECRET_KEY = "chavesupersecreta@@@@@@!!!!!";
+    private static final String SECRET_KEY = "chave@!super!@secreta@@!";
     private static final long EXPIRATION_TIME_HOURS = 1;
     private static final String USER_ID_CLAIM = "idUsuario";
 

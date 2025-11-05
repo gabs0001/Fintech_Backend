@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.Optional;
-import java.util.regex.Pattern;
 
 @Service
 public class UsuarioService {
@@ -52,9 +51,10 @@ public class UsuarioService {
             return true;
         }
 
-        Pattern p = Pattern.compile("^(?=.*[a-zA-Z])(?=.*[0-9]).+$");
+        boolean contemLetra = senha.matches(".*[a-zA-Z].*");
+        boolean contemNumero = senha.matches(".*[0-9].*");
 
-        return !p.matcher(senha).matches();
+        return !(contemLetra && contemNumero);
     }
 
     public Usuario getById(Long entityId, Long userId) throws EntityNotFoundException, IllegalArgumentException {

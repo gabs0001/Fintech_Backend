@@ -1,11 +1,14 @@
 package br.com.fintech.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 @Entity
+@JsonIgnoreProperties({" hibernateLazyInitializer", "handler" })
 @Table(name = "T_SIF_CATEGORIA_GASTO")
 public class CategoriaGasto {
     @Id
+    @Column(name = "COD_CATEGORIA_GASTO")
     @GeneratedValue(
             strategy = GenerationType.SEQUENCE,
             generator = "SEQ_SIF_CATEGORIA_GASTO"

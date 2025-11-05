@@ -3,6 +3,7 @@ package br.com.fintech.controller;
 import br.com.fintech.exceptions.EntityNotFoundException;
 import br.com.fintech.model.Instituicao;
 import br.com.fintech.service.InstituicaoService;
+import org.springframework.boot.autoconfigure.neo4j.Neo4jProperties;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

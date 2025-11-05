@@ -1,6 +1,8 @@
 package br.com.fintech.service;
 
 import br.com.fintech.dto.DashboardDTO;
+import br.com.fintech.dto.GastoDTO;
+import br.com.fintech.dto.RecebimentoDTO;
 import br.com.fintech.model.Gasto;
 import br.com.fintech.model.Recebimento;
 import org.springframework.stereotype.Service;
@@ -72,17 +74,24 @@ public class RelatorioService {
         Optional<Recebimento> ultimoRecebimentoOpt = this.getUltimoRecebimento(userId);
         List<Recebimento> ultimosRecebimentos = this.getUltimosRecebimentos(userId, limite);
 
-        Gasto ultimoGasto = ultimoGastoOpt.orElse(null);
-        Recebimento ultimoRecebimento = ultimoRecebimentoOpt.orElse(null);
+        GastoDTO ultimoGastoDTO = ultimoGastoOpt.map(GastoDTO::new).orElse(null);
+        List<GastoDTO> ultimosGastosDTO = ultimosGastos.stream()
+                .map(GastoDTO::new)
+                .toList();
+
+        RecebimentoDTO ultimoRecebimentoDTO = ultimoRecebimentoOpt.map(RecebimentoDTO::new).orElse(null);
+        List<RecebimentoDTO> ultimosRecebimentosDTO = ultimosRecebimentos.stream()
+                .map(RecebimentoDTO::new)
+                .toList();
 
         return new DashboardDTO(
                 saldoGeral,
                 saldoPeriodo,
                 totalInvestido,
-                ultimoGasto,
-                ultimosGastos,
-                ultimoRecebimento,
-                ultimosRecebimentos,
+                ultimoGastoDTO,
+                ultimosGastosDTO,
+                ultimoRecebimentoDTO,
+                ultimosRecebimentosDTO,
                 userId
         );
     }

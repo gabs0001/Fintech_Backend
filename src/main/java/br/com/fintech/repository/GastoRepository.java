@@ -20,7 +20,7 @@ public interface GastoRepository extends OwnedEntityRepository<Gasto, Long> {
     );
 
     @Query(
-            value = "SELECT * FROM T_SIF_GASTO g WHERE g.COD_USUARIO = ?1 ORDER BY g.DAT_GASTO DESC LIMIT ?2",
+            value = "SELECT * FROM T_SIF_GASTO g WHERE g.COD_USUARIO = ?1 ORDER BY g.DAT_GASTO DESC FETCH FIRST ?2 ROWS ONLY",
             nativeQuery = true
     )
     List<Gasto> findUltimosGastos(Long usuarioId, int limite);

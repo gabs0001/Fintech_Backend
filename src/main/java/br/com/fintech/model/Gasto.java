@@ -1,11 +1,13 @@
 package br.com.fintech.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
+@JsonIgnoreProperties({" hibernateLazyInitializer", "handler" })
 @Table(name = "T_SIF_GASTO")
 @AttributeOverrides({
   @AttributeOverride(name = "id", column = @Column(name = "COD_GASTO")),

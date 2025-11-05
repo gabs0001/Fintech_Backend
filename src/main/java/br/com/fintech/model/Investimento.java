@@ -1,17 +1,19 @@
 package br.com.fintech.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
+@JsonIgnoreProperties({" hibernateLazyInitializer", "handler" })
 @Table(name = "T_SIF_INVESTIMENTO")
 @AttributeOverrides({
         @AttributeOverride(name = "id", column = @Column(name = "COD_INVESTIMENTO")),
         @AttributeOverride(name = "usuarioId", column = @Column(name = "COD_USUARIO")),
         @AttributeOverride(name = "descricao", column = @Column(name = "DES_INVESTIMENTO")),
-        @AttributeOverride(name = "valor", column = @Column(name = "VAL_INVESTIMENTO"))
+        @AttributeOverride(name = "valor", column = @Column(name = "VAL_APLICACAO"))
 })
 public class Investimento extends Transacao {
     @Column(name = "NOM_APLICACAO", length = 100, nullable = false)

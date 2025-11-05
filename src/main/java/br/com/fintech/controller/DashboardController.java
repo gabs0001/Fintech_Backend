@@ -4,6 +4,10 @@ import br.com.fintech.dto.DashboardDTO;
 import br.com.fintech.model.Gasto;
 import br.com.fintech.model.Recebimento;
 import br.com.fintech.service.RelatorioService;
+import br.com.fintech.service.security.JwtService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.transaction.Transactional;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,74 +19,89 @@ import java.util.Optional;
 @RequestMapping("/api/dashboard")
 public class DashboardController {
     private final RelatorioService relatorioService;
-    private static final Long MOCK_USER_ID = 1L;
+    private final JwtService jwtService;
 
-    public DashboardController(RelatorioService relatorioService) {
+    public DashboardController(RelatorioService relatorioService, JwtService jwtService) {
         this.relatorioService = relatorioService;
+        this.jwtService = jwtService;
+    }
+
+    private Long getUsuarioId(HttpServletRequest request) {
+        String token = request.getHeader("Authorization");
+        if (token != null && token.startsWith("Bearer ")) {
+            token = token.substring(7);
+        }
+        return jwtService.getUserIdFromToken(token);
     }
 
     @GetMapping
     public ResponseEntity<DashboardDTO> buscarTodos(
             @RequestParam(value = "limite", defaultValue = "5") int limite,
             @RequestParam("inicio") LocalDate inicio,
-            @RequestParam("fim") LocalDate fim
+            @RequestParam("fim") LocalDate fim,
+            HttpServletRequest request
     ) {
-        Long userId = MOCK_USER_ID;
+        Long userId = getUsuarioId(request);
+        if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
 
-        DashboardDTO dashboardDTO =  relatorioService.getDashboard(userId, limite, inicio, fim);
-
+        DashboardDTO dashboardDTO = relatorioService.getDashboard(userId, limite, inicio, fim);
         return ResponseEntity.ok(dashboardDTO);
     }
 
     @GetMapping("/saldo-geral")
-    public ResponseEntity<BigDecimal> getSaldoGeral() {
-        Long userId = MOCK_USER_ID;
+    public ResponseEntity<BigDecimal> getSaldoGeral(HttpServletRequest request) {
+        Long userId = getUsuarioId(request);
+        if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
 
-        BigDecimal saldoGeral =  relatorioService.calcularSaldoGeral(userId);
-
+        BigDecimal saldoGeral = relatorioService.calcularSaldoGeral(userId);
         return ResponseEntity.ok(saldoGeral);
     }
 
     @GetMapping("/total-investido")
-    public ResponseEntity<BigDecimal> getTotalInvestido() {
-        Long userId = MOCK_USER_ID;
+    public ResponseEntity<BigDecimal> getTotalInvestido(HttpServletRequest request) {
+        Long userId = getUsuarioId(request);
+        if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
 
-        BigDecimal totalInvestido =  relatorioService.calcularTotalInvestido(userId);
-
+        BigDecimal totalInvestido = relatorioService.calcularTotalInvestido(userId);
         return ResponseEntity.ok(totalInvestido);
     }
 
+    @Transactional
     @GetMapping("/ultimo-gasto")
-    public ResponseEntity<Gasto> getUltimoGasto() {
-        Long userId = MOCK_USER_ID;
+    public ResponseEntity<Gasto> getUltimoGasto(HttpServletRequest request) {
+        Long userId = getUsuarioId(request);
+        if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
 
         Optional<Gasto> optionalGasto = relatorioService.getUltimoGasto(userId);
 
-        return optionalGasto
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+        optionalGasto.ifPresent(gasto -> {
+            if(gasto.getCategoriaGasto() != null) {
+                gasto.getCategoriaGasto().getDescricao();
+            }
+        });
+
+        return optionalGasto.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @GetMapping("/ultimo-recebimento")
-    public ResponseEntity<Recebimento> getUltimoRecebimento() {
-        Long userId = MOCK_USER_ID;
+    public ResponseEntity<Recebimento> getUltimoRecebimento(HttpServletRequest request) {
+        Long userId = getUsuarioId(request);
+        if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
 
         Optional<Recebimento> optionalRecebimento = relatorioService.getUltimoRecebimento(userId);
-
-        return optionalRecebimento
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+        return optionalRecebimento.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @GetMapping("/saldo-por-periodo")
     public ResponseEntity<BigDecimal> getSaldoPorPeriodo(
             @RequestParam LocalDate inicio,
-            @RequestParam LocalDate fim
+            @RequestParam LocalDate fim,
+            HttpServletRequest request
     ) {
-        Long userId = MOCK_USER_ID;
+        Long userId = getUsuarioId(request);
+        if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
 
         BigDecimal saldoPeriodo = relatorioService.calcularSaldoPeriodo(userId, inicio, fim);
-
         return ResponseEntity.ok(saldoPeriodo);
     }
 }
