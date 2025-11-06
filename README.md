@@ -83,7 +83,7 @@ Todas as rotas exigem o cabeçalho `Authorization: Bearer <TOKEN_JWT>` (exceto a
 | `/api/instituicoes/{id}` | `PUT` | Atualiza uma instituição existente. | Sim |
 | `/api/instituicoes/{id}` | `DELETE` | Remove uma instituição. | Sim |
 
-### Tipos de Recebimento (`/api/tipos-recebimento`)
+### Tipos de Recebimento (`/api/tipos-recebimentos`)
 
 | Rota | Método | Descrição | Requer Token |
 | :--- | :--- | :--- | :--- |
@@ -91,7 +91,7 @@ Todas as rotas exigem o cabeçalho `Authorization: Bearer <TOKEN_JWT>` (exceto a
 | `/api/tipos-recebimento` | `GET` | Lista todos os tipos de recebimento. | Sim |
 | ... | `PUT` / `DELETE` | (Outras operações CRUD) | Sim |
 
-### Tipos de Investimento (`/api/tipos-investimento`)
+### Tipos de Investimento (`/api/tipos-investimentos`)
 
 | Rota | Método | Descrição | Requer Token |
 | :--- | :--- | :--- | :--- |
