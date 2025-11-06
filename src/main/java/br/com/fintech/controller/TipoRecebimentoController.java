@@ -1,5 +1,6 @@
 package br.com.fintech.controller;
 
+import br.com.fintech.dto.TipoRecebimentoDTO;
 import br.com.fintech.exceptions.EntityNotFoundException;
 import br.com.fintech.model.TipoRecebimento;
 import br.com.fintech.service.TipoRecebimentoService;
@@ -19,32 +20,33 @@ public class TipoRecebimentoController {
     }
 
     @GetMapping
-    public ResponseEntity<List<TipoRecebimento>> buscarTodos() {
+    public ResponseEntity<List<TipoRecebimentoDTO>> buscarTodos() {
         List<TipoRecebimento> todasAsCategorias = tipoRecebimentoService.getAll();
-        return ResponseEntity.ok(todasAsCategorias);
+        List<TipoRecebimentoDTO> categoriasDTO = todasAsCategorias.stream()
+                .map(TipoRecebimentoDTO::new)
+                .toList();
+
+        return ResponseEntity.ok(categoriasDTO);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<TipoRecebimento> buscarPorId(@PathVariable("id") Long id) {
+    public ResponseEntity<TipoRecebimentoDTO> buscarPorId(@PathVariable("id") Long id) {
         TipoRecebimento categoriaPorId = tipoRecebimentoService.getById(id);
-
-        return ResponseEntity.ok(categoriaPorId);
+        return ResponseEntity.ok(new TipoRecebimentoDTO(categoriaPorId));
     }
 
     @PostMapping
-    public ResponseEntity<TipoRecebimento> salvar(@RequestBody TipoRecebimento categoria) throws EntityNotFoundException {
+    public ResponseEntity<TipoRecebimentoDTO> salvar(@RequestBody TipoRecebimento categoria) throws EntityNotFoundException {
         TipoRecebimento novaCategoria = tipoRecebimentoService.insert(categoria);
-        return ResponseEntity.status(HttpStatus.CREATED).body(novaCategoria);
+        return ResponseEntity.status(HttpStatus.CREATED).body(new TipoRecebimentoDTO(novaCategoria));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<TipoRecebimento> atualizar(@PathVariable("id") Long id, @RequestBody TipoRecebimento categoria)
-            throws EntityNotFoundException
-    {
+    public ResponseEntity<TipoRecebimentoDTO> atualizar(@PathVariable("id") Long id, @RequestBody TipoRecebimento categoria)
+            throws EntityNotFoundException {
         categoria.setId(id);
-
-        TipoRecebimento categoriaParaAtualizar = tipoRecebimentoService.update(id, categoria);
-        return ResponseEntity.ok(categoriaParaAtualizar);
+        TipoRecebimento categoriaAtualizada = tipoRecebimentoService.update(id, categoria);
+        return ResponseEntity.ok(new TipoRecebimentoDTO(categoriaAtualizada));
     }
 
     @DeleteMapping("/{id}")

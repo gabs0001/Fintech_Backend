@@ -1,12 +1,11 @@
 package br.com.fintech.controller;
 
 import br.com.fintech.dto.DashboardDTO;
-import br.com.fintech.model.Gasto;
-import br.com.fintech.model.Recebimento;
+import br.com.fintech.dto.GastoDTO;
+import br.com.fintech.dto.RecebimentoDTO;
 import br.com.fintech.service.RelatorioService;
 import br.com.fintech.service.security.JwtService;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.transaction.Transactional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -66,30 +65,28 @@ public class DashboardController {
         return ResponseEntity.ok(totalInvestido);
     }
 
-    @Transactional
     @GetMapping("/ultimo-gasto")
-    public ResponseEntity<Gasto> getUltimoGasto(HttpServletRequest request) {
+    public ResponseEntity<GastoDTO> getUltimoGasto(HttpServletRequest request) {
         Long userId = getUsuarioId(request);
         if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
 
-        Optional<Gasto> optionalGasto = relatorioService.getUltimoGasto(userId);
+        Optional<GastoDTO> optionalGastoDTO = relatorioService.getUltimoGasto(userId)
+                .map(GastoDTO::new);
 
-        optionalGasto.ifPresent(gasto -> {
-            if(gasto.getCategoriaGasto() != null) {
-                gasto.getCategoriaGasto().getDescricao();
-            }
-        });
-
-        return optionalGasto.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+        return optionalGastoDTO.map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @GetMapping("/ultimo-recebimento")
-    public ResponseEntity<Recebimento> getUltimoRecebimento(HttpServletRequest request) {
+    public ResponseEntity<RecebimentoDTO> getUltimoRecebimento(HttpServletRequest request) {
         Long userId = getUsuarioId(request);
         if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
 
-        Optional<Recebimento> optionalRecebimento = relatorioService.getUltimoRecebimento(userId);
-        return optionalRecebimento.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+        Optional<RecebimentoDTO> optionalRecebimentoDTO = relatorioService.getUltimoRecebimento(userId)
+                .map(RecebimentoDTO::new);
+
+        return optionalRecebimentoDTO.map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @GetMapping("/saldo-por-periodo")

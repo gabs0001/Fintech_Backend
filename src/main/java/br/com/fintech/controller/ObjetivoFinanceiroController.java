@@ -1,5 +1,6 @@
 package br.com.fintech.controller;
 
+import br.com.fintech.dto.ObjetivoFinanceiroDTO;
 import br.com.fintech.exceptions.EntityNotFoundException;
 import br.com.fintech.model.ObjetivoFinanceiro;
 import br.com.fintech.service.ObjetivoFinanceiroService;
@@ -31,37 +32,41 @@ public class ObjetivoFinanceiroController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ObjetivoFinanceiro>> buscarTodos(HttpServletRequest request) {
+    public ResponseEntity<List<ObjetivoFinanceiroDTO>> buscarTodos(HttpServletRequest request) {
         Long userId = getUsuarioId(request);
         if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
 
         List<ObjetivoFinanceiro> todosOsObjetivosFinanceiros = objetivoFinanceiroService.findAllByOwnerId(userId);
-        return ResponseEntity.ok(todosOsObjetivosFinanceiros);
+        List<ObjetivoFinanceiroDTO> objetivosDTO = todosOsObjetivosFinanceiros.stream()
+                .map(ObjetivoFinanceiroDTO::new)
+                .toList();
+
+        return ResponseEntity.ok(objetivosDTO);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ObjetivoFinanceiro> buscarPorId(@PathVariable("id") Long id, HttpServletRequest request)
+    public ResponseEntity<ObjetivoFinanceiroDTO> buscarPorId(@PathVariable("id") Long id, HttpServletRequest request)
             throws EntityNotFoundException {
         Long userId = getUsuarioId(request);
         if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
 
         ObjetivoFinanceiro objetivoPorId = objetivoFinanceiroService.getById(id, userId);
-        return ResponseEntity.ok(objetivoPorId);
+        return ResponseEntity.ok(new ObjetivoFinanceiroDTO(objetivoPorId));
     }
 
     @PostMapping
-    public ResponseEntity<ObjetivoFinanceiro> salvar(@RequestBody ObjetivoFinanceiro objetivoFinanceiro, HttpServletRequest request)
+    public ResponseEntity<ObjetivoFinanceiroDTO> salvar(@RequestBody ObjetivoFinanceiro objetivoFinanceiro, HttpServletRequest request)
             throws EntityNotFoundException, IllegalArgumentException {
         Long userId = getUsuarioId(request);
         if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
 
         objetivoFinanceiro.setUsuarioId(userId);
         ObjetivoFinanceiro novoObjetivoFinanceiro = objetivoFinanceiroService.insert(objetivoFinanceiro);
-        return ResponseEntity.status(HttpStatus.CREATED).body(novoObjetivoFinanceiro);
+        return ResponseEntity.status(HttpStatus.CREATED).body(new ObjetivoFinanceiroDTO(novoObjetivoFinanceiro));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ObjetivoFinanceiro> atualizar(
+    public ResponseEntity<ObjetivoFinanceiroDTO> atualizar(
             @PathVariable("id") Long id,
             @RequestBody ObjetivoFinanceiro objetivoFinanceiro,
             HttpServletRequest request
@@ -71,8 +76,8 @@ public class ObjetivoFinanceiroController {
 
         objetivoFinanceiro.setId(id);
         objetivoFinanceiro.setUsuarioId(userId);
-        ObjetivoFinanceiro objetivoParaAtualizar = objetivoFinanceiroService.update(userId, objetivoFinanceiro);
-        return ResponseEntity.ok(objetivoParaAtualizar);
+        ObjetivoFinanceiro objetivoAtualizado = objetivoFinanceiroService.update(userId, objetivoFinanceiro);
+        return ResponseEntity.ok(new ObjetivoFinanceiroDTO(objetivoAtualizado));
     }
 
     @DeleteMapping("/{id}")

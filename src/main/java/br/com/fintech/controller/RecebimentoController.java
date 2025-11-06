@@ -1,5 +1,6 @@
 package br.com.fintech.controller;
 
+import br.com.fintech.dto.RecebimentoDTO;
 import br.com.fintech.exceptions.EntityNotFoundException;
 import br.com.fintech.model.Recebimento;
 import br.com.fintech.service.RecebimentoService;
@@ -31,45 +32,49 @@ public class RecebimentoController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Recebimento>> buscarTodos(HttpServletRequest request) {
+    public ResponseEntity<List<RecebimentoDTO>> buscarTodos(HttpServletRequest request) {
         Long userId = getUsuarioId(request);
         if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
 
         List<Recebimento> todosOsRecebimentos = recebimentoService.findAllByOwnerId(userId);
-        return ResponseEntity.ok(todosOsRecebimentos);
+        List<RecebimentoDTO> recebimentosDTO = todosOsRecebimentos.stream()
+                .map(RecebimentoDTO::new)
+                .toList();
+
+        return ResponseEntity.ok(recebimentosDTO);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Recebimento> buscarPorId(@PathVariable("id") Long id, HttpServletRequest request)
+    public ResponseEntity<RecebimentoDTO> buscarPorId(@PathVariable("id") Long id, HttpServletRequest request)
             throws EntityNotFoundException {
         Long userId = getUsuarioId(request);
         if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
 
         Recebimento recebimentoPorId = recebimentoService.getById(id, userId);
-        return ResponseEntity.ok(recebimentoPorId);
+        return ResponseEntity.ok(new RecebimentoDTO(recebimentoPorId));
     }
 
     @PostMapping
-    public ResponseEntity<Recebimento> salvar(@RequestBody Recebimento recebimento, HttpServletRequest request)
+    public ResponseEntity<RecebimentoDTO> salvar(@RequestBody Recebimento recebimento, HttpServletRequest request)
             throws IllegalArgumentException, EntityNotFoundException {
         Long userId = getUsuarioId(request);
         if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
 
         recebimento.setUsuarioId(userId);
         Recebimento novoRecebimento = recebimentoService.insert(recebimento);
-        return ResponseEntity.status(HttpStatus.CREATED).body(novoRecebimento);
+        return ResponseEntity.status(HttpStatus.CREATED).body(new RecebimentoDTO(novoRecebimento));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Recebimento> atualizar(@PathVariable("id") Long id, @RequestBody Recebimento recebimento, HttpServletRequest request)
+    public ResponseEntity<RecebimentoDTO> atualizar(@PathVariable("id") Long id, @RequestBody Recebimento recebimento, HttpServletRequest request)
             throws EntityNotFoundException, IllegalArgumentException {
         Long userId = getUsuarioId(request);
         if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
 
         recebimento.setId(id);
         recebimento.setUsuarioId(userId);
-        Recebimento recebimentoParaAtualizar = recebimentoService.update(userId, recebimento);
-        return ResponseEntity.ok(recebimentoParaAtualizar);
+        Recebimento recebimentoAtualizado = recebimentoService.update(userId, recebimento);
+        return ResponseEntity.ok(new RecebimentoDTO(recebimentoAtualizado));
     }
 
     @DeleteMapping("/{id}")

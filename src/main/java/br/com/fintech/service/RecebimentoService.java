@@ -2,7 +2,9 @@ package br.com.fintech.service;
 
 import br.com.fintech.exceptions.EntityNotFoundException;
 import br.com.fintech.model.Recebimento;
-import br.com.fintech.repository.RecebimentoRepository; // Nova dependência JPA
+import br.com.fintech.repository.RecebimentoRepository;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -71,6 +73,11 @@ public class RecebimentoService extends CrudService<Recebimento, Long> {
 
     public List<Recebimento> getUltimos(Long userId, int limite) {
         return recebimentoRepository.findUltimosRecebimentos(userId, limite);
+    }
+
+    public List<Recebimento> getUltimosPorPeriodo(Long userId, int limite, LocalDate inicio, LocalDate fim) {
+        Pageable pageable = PageRequest.of(0, limite);
+        return recebimentoRepository.findByUsuarioIdAndDataRecebimentoBetweenOrderByDataRecebimentoDesc(userId, inicio, fim, pageable);
     }
 
     public BigDecimal calcularTotal(Long userId) {

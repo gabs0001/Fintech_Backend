@@ -1,5 +1,6 @@
 package br.com.fintech.controller;
 
+import br.com.fintech.dto.GastoDTO;
 import br.com.fintech.exceptions.EntityNotFoundException;
 import br.com.fintech.model.Gasto;
 import br.com.fintech.service.GastoService;
@@ -31,37 +32,41 @@ public class GastoController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Gasto>> buscarTodos(HttpServletRequest request) {
+    public ResponseEntity<List<GastoDTO>> buscarTodos(HttpServletRequest request) {
         Long userId = getUsuarioId(request);
         if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
 
         List<Gasto> todosOsGastos = gastoService.findAllByOwnerId(userId);
-        return ResponseEntity.ok(todosOsGastos);
+        List<GastoDTO> gastosDTO = todosOsGastos.stream()
+                .map(GastoDTO::new)
+                .toList();
+
+        return ResponseEntity.ok(gastosDTO);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Gasto> buscarPorId(@PathVariable("id") Long id, HttpServletRequest request)
+    public ResponseEntity<GastoDTO> buscarPorId(@PathVariable("id") Long id, HttpServletRequest request)
             throws EntityNotFoundException {
         Long userId = getUsuarioId(request);
         if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
 
         Gasto gastoPorId = gastoService.getById(id, userId);
-        return ResponseEntity.ok(gastoPorId);
+        return ResponseEntity.ok(new GastoDTO(gastoPorId));
     }
 
     @PostMapping
-    public ResponseEntity<Gasto> salvar(@RequestBody Gasto gasto, HttpServletRequest request)
+    public ResponseEntity<GastoDTO> salvar(@RequestBody Gasto gasto, HttpServletRequest request)
             throws IllegalArgumentException, EntityNotFoundException {
         Long userId = getUsuarioId(request);
         if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
 
         gasto.setUsuarioId(userId);
         Gasto novoGasto = gastoService.insert(gasto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(novoGasto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(new GastoDTO(novoGasto));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Gasto> atualizar(@PathVariable("id") Long id, @RequestBody Gasto gasto, HttpServletRequest request)
+    public ResponseEntity<GastoDTO> atualizar(@PathVariable("id") Long id, @RequestBody Gasto gasto, HttpServletRequest request)
             throws EntityNotFoundException, IllegalArgumentException {
         Long userId = getUsuarioId(request);
         if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -69,7 +74,7 @@ public class GastoController {
         gasto.setId(id);
         gasto.setUsuarioId(userId);
         Gasto gastoAtualizado = gastoService.update(userId, gasto);
-        return ResponseEntity.ok(gastoAtualizado);
+        return ResponseEntity.ok(new GastoDTO(gastoAtualizado));
     }
 
     @DeleteMapping("/{id}")

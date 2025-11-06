@@ -3,6 +3,7 @@ package br.com.fintech.repository;
 import br.com.fintech.model.Gasto;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -24,4 +25,6 @@ public interface GastoRepository extends OwnedEntityRepository<Gasto, Long> {
             nativeQuery = true
     )
     List<Gasto> findUltimosGastos(Long usuarioId, int limite);
+
+    List<Gasto> findByUsuarioIdAndDataGastoBetweenOrderByDataGastoDesc(Long usuarioId, LocalDate inicio, LocalDate fim, Pageable pageable);
 }

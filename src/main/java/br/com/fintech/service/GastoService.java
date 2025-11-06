@@ -3,6 +3,8 @@ package br.com.fintech.service;
 import br.com.fintech.exceptions.EntityNotFoundException;
 import br.com.fintech.model.Gasto;
 import br.com.fintech.repository.GastoRepository;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -71,6 +73,11 @@ public class GastoService extends CrudService<Gasto, Long> {
 
     public List<Gasto> getUltimos(Long userId, int limite) {
         return gastoRepository.findUltimosGastos(userId, limite);
+    }
+
+    public List<Gasto> getUltimosPorPeriodo(Long userId, int limite, LocalDate inicio, LocalDate fim) {
+        Pageable pageable = PageRequest.of(0, limite);
+        return gastoRepository.findByUsuarioIdAndDataGastoBetweenOrderByDataGastoDesc(userId, inicio, fim, pageable);
     }
 
     public BigDecimal calcularTotal(Long userId) {

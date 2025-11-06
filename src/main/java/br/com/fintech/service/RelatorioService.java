@@ -70,9 +70,9 @@ public class RelatorioService {
         BigDecimal totalInvestido = this.calcularTotalInvestido(userId);
 
         Optional<Gasto> ultimoGastoOpt = this.getUltimoGasto(userId);
-        List<Gasto> ultimosGastos = this.getUltimosGastos(userId, limite);
+        List<Gasto> ultimosGastos = this.gastoService.getUltimosPorPeriodo(userId, limite, inicio, fim);
         Optional<Recebimento> ultimoRecebimentoOpt = this.getUltimoRecebimento(userId);
-        List<Recebimento> ultimosRecebimentos = this.getUltimosRecebimentos(userId, limite);
+        List<Recebimento> ultimosRecebimentos = this.recebimentoService.getUltimosPorPeriodo(userId, limite, inicio, fim);
 
         GastoDTO ultimoGastoDTO = ultimoGastoOpt.map(GastoDTO::new).orElse(null);
         List<GastoDTO> ultimosGastosDTO = ultimosGastos.stream()

@@ -1,5 +1,6 @@
 package br.com.fintech.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
@@ -17,6 +18,7 @@ import java.time.LocalDate;
 })
 public class Recebimento extends Transacao {
     @Column(name = "DAT_RECEBIMENTO")
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate dataRecebimento;
 
     @ManyToOne(fetch = FetchType.LAZY)

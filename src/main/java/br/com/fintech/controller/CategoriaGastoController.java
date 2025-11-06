@@ -1,5 +1,6 @@
 package br.com.fintech.controller;
 
+import br.com.fintech.dto.CategoriaGastoDTO;
 import br.com.fintech.exceptions.EntityNotFoundException;
 import br.com.fintech.model.CategoriaGasto;
 import br.com.fintech.service.CategoriaGastoService;
@@ -19,32 +20,33 @@ public class CategoriaGastoController {
     }
 
     @GetMapping
-    public ResponseEntity<List<CategoriaGasto>> buscarTodos() {
+    public ResponseEntity<List<CategoriaGastoDTO>> buscarTodos() {
         List<CategoriaGasto> todasAsCategorias = categoriaGastoService.getAll();
-        return ResponseEntity.ok(todasAsCategorias);
+        List<CategoriaGastoDTO> categoriasDTO = todasAsCategorias.stream()
+                .map(CategoriaGastoDTO::new)
+                .toList();
+
+        return ResponseEntity.ok(categoriasDTO);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<CategoriaGasto> buscarPorId(@PathVariable("id") Long id) {
+    public ResponseEntity<CategoriaGastoDTO> buscarPorId(@PathVariable("id") Long id) {
         CategoriaGasto categoriaPorId = categoriaGastoService.getById(id);
-
-        return ResponseEntity.ok(categoriaPorId);
+        return ResponseEntity.ok(new CategoriaGastoDTO(categoriaPorId));
     }
 
     @PostMapping
-    public ResponseEntity<CategoriaGasto> salvar(@RequestBody CategoriaGasto categoria) throws EntityNotFoundException {
+    public ResponseEntity<CategoriaGastoDTO> salvar(@RequestBody CategoriaGasto categoria) throws EntityNotFoundException {
         CategoriaGasto novaCategoria = categoriaGastoService.insert(categoria);
-        return ResponseEntity.status(HttpStatus.CREATED).body(novaCategoria);
+        return ResponseEntity.status(HttpStatus.CREATED).body(new CategoriaGastoDTO(novaCategoria));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<CategoriaGasto> atualizar(@PathVariable("id") Long id, @RequestBody CategoriaGasto categoria)
-            throws EntityNotFoundException
-    {
+    public ResponseEntity<CategoriaGastoDTO> atualizar(@PathVariable("id") Long id, @RequestBody CategoriaGasto categoria)
+            throws EntityNotFoundException {
         categoria.setId(id);
-
-        CategoriaGasto categoriaParaAtualizar = categoriaGastoService.update(id, categoria);
-        return ResponseEntity.ok(categoriaParaAtualizar);
+        CategoriaGasto categoriaAtualizada = categoriaGastoService.update(id, categoria);
+        return ResponseEntity.ok(new CategoriaGastoDTO(categoriaAtualizada));
     }
 
     @DeleteMapping("/{id}")

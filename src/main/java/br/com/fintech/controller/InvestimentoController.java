@@ -1,5 +1,6 @@
 package br.com.fintech.controller;
 
+import br.com.fintech.dto.InvestimentoDTO;
 import br.com.fintech.exceptions.EntityNotFoundException;
 import br.com.fintech.model.Investimento;
 import br.com.fintech.service.InvestimentoService;
@@ -31,45 +32,49 @@ public class InvestimentoController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Investimento>> buscarTodos(HttpServletRequest request) {
+    public ResponseEntity<List<InvestimentoDTO>> buscarTodos(HttpServletRequest request) {
         Long userId = getUsuarioId(request);
         if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
 
         List<Investimento> todosOsInvestimentos = investimentoService.findAllByOwnerId(userId);
-        return ResponseEntity.ok(todosOsInvestimentos);
+        List<InvestimentoDTO> investimentosDTO = todosOsInvestimentos.stream()
+                .map(InvestimentoDTO::new)
+                .toList();
+
+        return ResponseEntity.ok(investimentosDTO);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Investimento> buscarPorId(@PathVariable("id") Long id, HttpServletRequest request)
+    public ResponseEntity<InvestimentoDTO> buscarPorId(@PathVariable("id") Long id, HttpServletRequest request)
             throws EntityNotFoundException {
         Long userId = getUsuarioId(request);
         if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
 
         Investimento investimentoPorId = investimentoService.getById(id, userId);
-        return ResponseEntity.ok(investimentoPorId);
+        return ResponseEntity.ok(new InvestimentoDTO(investimentoPorId));
     }
 
     @PostMapping
-    public ResponseEntity<Investimento> salvar(@RequestBody Investimento investimento, HttpServletRequest request)
+    public ResponseEntity<InvestimentoDTO> salvar(@RequestBody Investimento investimento, HttpServletRequest request)
             throws EntityNotFoundException, IllegalArgumentException {
         Long userId = getUsuarioId(request);
         if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
 
         investimento.setUsuarioId(userId);
         Investimento novoInvestimento = investimentoService.insert(investimento);
-        return ResponseEntity.status(HttpStatus.CREATED).body(novoInvestimento);
+        return ResponseEntity.status(HttpStatus.CREATED).body(new InvestimentoDTO(novoInvestimento));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Investimento> atualizar(@PathVariable("id") Long id, @RequestBody Investimento investimento, HttpServletRequest request)
+    public ResponseEntity<InvestimentoDTO> atualizar(@PathVariable("id") Long id, @RequestBody Investimento investimento, HttpServletRequest request)
             throws EntityNotFoundException, IllegalArgumentException {
         Long userId = getUsuarioId(request);
         if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
 
         investimento.setId(id);
         investimento.setUsuarioId(userId);
-        Investimento investimentoParaAtualizar = investimentoService.update(userId, investimento);
-        return ResponseEntity.ok(investimentoParaAtualizar);
+        Investimento investimentoAtualizado = investimentoService.update(userId, investimento);
+        return ResponseEntity.ok(new InvestimentoDTO(investimentoAtualizado));
     }
 
     @DeleteMapping("/{id}")

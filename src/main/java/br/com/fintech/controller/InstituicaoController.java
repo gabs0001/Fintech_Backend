@@ -1,9 +1,9 @@
 package br.com.fintech.controller;
 
+import br.com.fintech.dto.InstituicaoDTO;
 import br.com.fintech.exceptions.EntityNotFoundException;
 import br.com.fintech.model.Instituicao;
 import br.com.fintech.service.InstituicaoService;
-import org.springframework.boot.autoconfigure.neo4j.Neo4jProperties;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,29 +20,33 @@ public class InstituicaoController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Instituicao>> buscarTodos() {
+    public ResponseEntity<List<InstituicaoDTO>> buscarTodos() {
         List<Instituicao> todasAsInstituicoes = instituicaoService.getAll();
-        return ResponseEntity.ok(todasAsInstituicoes);
+        List<InstituicaoDTO> instituicoesDTO = todasAsInstituicoes.stream()
+                .map(InstituicaoDTO::new)
+                .toList();
+
+        return ResponseEntity.ok(instituicoesDTO);
     }
 
     @GetMapping("{id}")
-    public ResponseEntity<Instituicao> buscarPorId(@PathVariable Long id) {
+    public ResponseEntity<InstituicaoDTO> buscarPorId(@PathVariable Long id) {
         Instituicao instituicaoPorId = instituicaoService.getById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Instituição com id: " + id + "não encontrada!"));
+                .orElseThrow(() -> new EntityNotFoundException("Instituição com id: " + id + " não encontrada!"));
 
-        return ResponseEntity.ok(instituicaoPorId);
+        return ResponseEntity.ok(new InstituicaoDTO(instituicaoPorId));
     }
 
     @PostMapping
-    public ResponseEntity<Instituicao> salvar(@RequestBody Instituicao instituicao) throws EntityNotFoundException {
+    public ResponseEntity<InstituicaoDTO> salvar(@RequestBody Instituicao instituicao) throws EntityNotFoundException {
         Instituicao novaInstituicao = instituicaoService.insert(instituicao);
-        return ResponseEntity.status(HttpStatus.CREATED).body(novaInstituicao);
+        return ResponseEntity.status(HttpStatus.CREATED).body(new InstituicaoDTO(novaInstituicao));
     }
 
     @PutMapping("{id}")
-    public ResponseEntity<Instituicao> atualizar(@PathVariable("id") Long id, @RequestBody Instituicao instituicao) throws EntityNotFoundException {
-        Instituicao instituicaoParaAtualizar = instituicaoService.update(id, instituicao);
-        return ResponseEntity.ok(instituicaoParaAtualizar);
+    public ResponseEntity<InstituicaoDTO> atualizar(@PathVariable("id") Long id, @RequestBody Instituicao instituicao) throws EntityNotFoundException {
+        Instituicao instituicaoAtualizada = instituicaoService.update(id, instituicao);
+        return ResponseEntity.ok(new InstituicaoDTO(instituicaoAtualizada));
     }
 
     @DeleteMapping("{id}")

@@ -1,5 +1,6 @@
 package br.com.fintech.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
@@ -36,6 +37,7 @@ public class ObjetivoFinanceiro implements OwnedEntity {
     private BigDecimal valor;
 
     @Column(name = "DAT_CONCLUSAO_OBJETIVO", nullable = false)
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate dataConclusao;
 
     public ObjetivoFinanceiro() { }
