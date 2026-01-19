@@ -9,8 +9,8 @@ O sistema oferece uma API RESTful segura, responsável por implementar toda a l�
 ### Funcionalidades Chave:
 
 * **Autenticação Segura:** Cadastro e Login de usuários com criptografia de senha (BCrypt) e Tokens JWT.
-* **Gestão de Entidades:** CRUD completo para Instituições Financeiras, Tipos de Investimento e Tipos de Recebimento, com escopo por usuário.
-* **Controle Financeiro:** Estrutura para registrar Transações, Investimentos e Objetivos Financeiros.
+* **Gestão de Entidades:** CRUD completo para Instituições Financeiras, Tipos de:  Investimento, Gasto, Recebimento com escopo por usuário.
+* **Controle Financeiro:** Estrutura para registrar Transações, Investimentos, Gastos, Recebimentos e Objetivos Financeiros.
 
 ## ⚙️ Tecnologias Utilizadas
 
